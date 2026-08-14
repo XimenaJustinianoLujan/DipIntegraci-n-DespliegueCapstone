@@ -1,0 +1,63 @@
+const db = require('../config/database');
+
+class FichaClinica {
+  static async create({ paciente_id, cita_id, medico_id, diagnostico, indicaciones, receta, observaciones }) {
+    const result = await db.query(
+      `INSERT INTO ficha_clinica (paciente_id, cita_id, medico_id, diagnostico, indicaciones, receta, observaciones)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [paciente_id, cita_id, medico_id, diagnostico, indicaciones || null, receta || null, observaciones || null]
+    );
+    return result.rows[0];
+  }
+
+  static async findById(id) {
+    const result = await db.query(
+      'SELECT * FROM ficha_clinica WHERE id = $1',
+      [id]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async findByPaciente(paciente_id) {
+    const result = await db.query(
+      `SELECT fc.*, m.nombre as medico_nombre, m.apellido as medico_apellido, e.nombre as especialidad
+       FROM ficha_clinica fc
+       JOIN medicos m ON fc.medico_id = m.id
+       JOIN citas c ON fc.cita_id = c.id
+       JOIN especialidades e ON c.especialidad_id = e.id
+       WHERE fc.paciente_id = $1
+       ORDER BY fc.created_at DESC`,
+      [paciente_id]
+    );
+    return result.rows;
+  }
+
+  static async findByCita(cita_id) {
+    const result = await db.query(
+      'SELECT * FROM ficha_clinica WHERE cita_id = $1',
+      [cita_id]
+    );
+    return result.rows[0] || null;
+  }
+
+  static async addDocumento({ ficha_clinica_id, nombre_archivo, tipo_archivo, ruta_archivo, tamano_bytes, descripcion, subido_por }) {
+    const result = await db.query(
+      `INSERT INTO documentos_adjuntos (ficha_clinica_id, nombre_archivo, tipo_archivo, ruta_archivo, tamano_bytes, descripcion, subido_por)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [ficha_clinica_id, nombre_archivo, tipo_archivo, ruta_archivo, tamano_bytes || null, descripcion || null, subido_por]
+    );
+    return result.rows[0];
+  }
+
+  static async getDocumentos(ficha_clinica_id) {
+    const result = await db.query(
+      'SELECT * FROM documentos_adjuntos WHERE ficha_clinica_id = $1 ORDER BY created_at DESC',
+      [ficha_clinica_id]
+    );
+    return result.rows;
+  }
+}
+
+module.exports = FichaClinica;
