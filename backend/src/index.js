@@ -20,17 +20,32 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:5173',
-];
+// CORS configuration.
+// Acepta: desarrollo local, cualquier URL listada en FRONTEND_URL (separadas por
+// coma) y cualquier despliegue de Vercel (*.vercel.app), asi funcionan tanto la URL
+// de produccion como las de preview. Se ignoran las barras finales.
+const normalizeOrigin = (url) => url.trim().replace(/\/+$/, '');
 
+const allowedOrigins = ['http://localhost:5173'];
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
+  process.env.FRONTEND_URL.split(',')
+    .map(normalizeOrigin)
+    .filter(Boolean)
+    .forEach((o) => allowedOrigins.push(o));
 }
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Permitir clientes sin Origin (curl, apps moviles, health checks).
+    if (!origin) return callback(null, true);
+    const cleaned = normalizeOrigin(origin);
+    const isAllowed =
+      allowedOrigins.includes(cleaned) ||
+      /^https?:\/\/[^/]+\.vercel\.app$/.test(cleaned);
+    return isAllowed
+      ? callback(null, true)
+      : callback(new Error(`Origen no permitido por CORS: ${origin}`));
+  },
   credentials: true,
 }));
 
