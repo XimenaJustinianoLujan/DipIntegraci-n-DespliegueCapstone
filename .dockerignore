@@ -1,0 +1,7 @@
+# El backend no necesita estos archivos en el contexto de build.
+**/node_modules
+**/.env
+frontend/
+docs/
+.git/
+*.md
