@@ -67,11 +67,12 @@ async function seed() {
     );
 
     // --- Paciente (email ya verificado para poder iniciar sesion en la demo) ---
+    // DO UPDATE del nombre para que re-ejecutar el seed actualice el registro existente.
     await client.query(
       `INSERT INTO pacientes (nombre, apellido, email, telefono, fecha_nacimiento, password_hash, email_verificado)
        VALUES ($1, $2, $3, $4, $5, $6, TRUE)
-       ON CONFLICT (email) DO NOTHING`,
-      ['Lucia', 'Paciente', 'paciente@clinica.com', '1150000004', '1990-05-15', await hash('Paciente123!')]
+       ON CONFLICT (email) DO UPDATE SET nombre = EXCLUDED.nombre, apellido = EXCLUDED.apellido`,
+      ['Ximena', 'Justiniano', 'paciente@clinica.com', '1150000004', '1990-05-15', await hash('Paciente123!')]
     );
 
     // --- Agenda del medico de demo: proximos 21 dias, solo bloques no-emergencia

@@ -36,7 +36,7 @@ export default function PatientDashboard() {
 
   return (
     <div>
-      <h1 style={styles.title}>Bienvenido, {user?.nombre}</h1>
+      <h1 style={styles.title}>Bienvenido/a, {user?.nombre}</h1>
       <p style={styles.subtitle}>Panel del paciente</p>
 
       <div style={styles.actions}>
