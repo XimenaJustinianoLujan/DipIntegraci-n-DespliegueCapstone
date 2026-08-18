@@ -94,12 +94,64 @@ async function seed() {
       [medicoId]
     );
 
+    // --- Cita de demostracion para HOY ---
+    // Las vistas de medico y secretaria filtran por la fecha actual, asi que creamos
+    // una cita CONFIRMADA de hoy (paciente Ximena con Dr. Garcia) para poder demostrar
+    // esos flujos en vivo. Idempotente y defensivo: si falla, no rompe el seed.
+    let citaHoyMsg = 'no creada';
+    try {
+      const pacRes = await client.query(
+        "SELECT id FROM pacientes WHERE email = 'paciente@clinica.com' LIMIT 1"
+      );
+      const pacienteId = pacRes.rows[0].id;
+
+      const yaExiste = await client.query(
+        `SELECT id FROM citas
+         WHERE paciente_id = $1 AND medico_id = $2 AND fecha = CURRENT_DATE AND estado <> 'CANCELADA'
+         LIMIT 1`,
+        [pacienteId, medicoId]
+      );
+
+      if (yaExiste.rows.length > 0) {
+        citaHoyMsg = 'ya existia (no se duplica)';
+      } else {
+        // Un bloque horario para el dia de hoy (cualquiera segun el dia de la semana).
+        const bloqueRes = await client.query(
+          `SELECT id, hora_inicio, hora_fin FROM bloques_horarios
+           WHERE dia_semana = EXTRACT(ISODOW FROM CURRENT_DATE)::int AND activo = TRUE
+           ORDER BY hora_inicio LIMIT 1`
+        );
+
+        if (bloqueRes.rows.length === 0) {
+          citaHoyMsg = 'no hay bloque horario para hoy';
+        } else {
+          const bloque = bloqueRes.rows[0];
+          const agendaHoy = await client.query(
+            `INSERT INTO agenda_medico (medico_id, bloque_horario_id, fecha, disponible, confirmado, creado_por, creado_por_rol)
+             VALUES ($1, $2, CURRENT_DATE, FALSE, TRUE, $1, 'medico')
+             ON CONFLICT (medico_id, bloque_horario_id, fecha) DO UPDATE SET disponible = FALSE
+             RETURNING id`,
+            [medicoId, bloque.id]
+          );
+          await client.query(
+            `INSERT INTO citas (paciente_id, medico_id, especialidad_id, agenda_id, fecha, hora_inicio, hora_fin, estado, motivo_consulta)
+             VALUES ($1, $2, $3, $4, CURRENT_DATE, $5, $6, 'CONFIRMADA', 'Control general (cita de demostracion)')`,
+            [pacienteId, medicoId, especialidadId, agendaHoy.rows[0].id, bloque.hora_inicio, bloque.hora_fin]
+          );
+          citaHoyMsg = `creada a las ${bloque.hora_inicio}`;
+        }
+      }
+    } catch (err) {
+      citaHoyMsg = `omitida (${err.message})`;
+    }
+
     console.log('Seed completado:');
     console.log('  - Administrador: admin@clinica.com     / Admin123!');
     console.log('  - Medico:        medico@clinica.com     / Medico123!  (usuario: dr.garcia)');
     console.log('  - Secretaria:    secretaria@clinica.com / Secre123!   (usuario: secretaria)');
     console.log('  - Paciente:      paciente@clinica.com   / Paciente123!');
     console.log(`  - Agenda del medico: ${agendaRes.rowCount} bloque(s) disponibles creados (proximos 21 dias).`);
+    console.log(`  - Cita de HOY (Ximena con Dr. Garcia): ${citaHoyMsg}.`);
   } finally {
     client.release();
     await pool.end();
