@@ -1,8 +1,15 @@
 const { Pool } = require('pg');
 const env = require('./env');
 
+// Cloud Postgres providers (Neon, Supabase, Render, etc.) require SSL, but a local
+// Postgres does not. Enable SSL automatically for any non-local DATABASE_URL.
+const isLocalDb = !env.databaseUrl || /@(localhost|127\.0\.0\.1)/.test(env.databaseUrl);
+
 const poolConfig = env.databaseUrl
-  ? { connectionString: env.databaseUrl }
+  ? {
+      connectionString: env.databaseUrl,
+      ssl: isLocalDb ? false : { rejectUnauthorized: false },
+    }
   : {
       host: env.pgHost,
       port: env.pgPort,

@@ -71,8 +71,10 @@ app.use((req, res) => {
 // Error handler
 app.use(errorHandler);
 
-// Start server only if not in test mode
-if (process.env.NODE_ENV !== 'test') {
+// Start the HTTP server only when this file is run directly (e.g. `node src/index.js`
+// or `npm run dev`). On serverless platforms like Vercel the module is imported, so
+// require.main !== module and we must NOT bind a port — Vercel handles the HTTP layer.
+if (require.main === module && process.env.NODE_ENV !== 'test') {
   const PORT = env.port;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} in ${env.nodeEnv} mode`);

@@ -37,8 +37,10 @@ const env = {
   smtpPassword: process.env.SMTP_PASSWORD || '',
   emailFrom: process.env.EMAIL_FROM || 'noreply@clinica.com',
 
-  // File uploads
-  uploadDir: process.env.UPLOAD_DIR || './uploads',
+  // File uploads. On serverless (Vercel) the only writable location is /tmp, so
+  // default there; note that /tmp is ephemeral (uploads do not persist between
+  // invocations). A production deployment should use object storage (S3/Blob).
+  uploadDir: process.env.UPLOAD_DIR || (process.env.VERCEL ? '/tmp/uploads' : './uploads'),
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 5242880,
 
   // Rate limiting

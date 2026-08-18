@@ -73,10 +73,13 @@ npm install
 
 # Copiar variables de entorno y configurar
 cp .env.example .env
-# Editar .env con tus valores reales
+# Editar .env con tus valores reales (DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET)
 
-# Ejecutar migraciones de base de datos
-# (ejecutar los scripts SQL en database/migrations/ en orden)
+# Ejecutar migraciones de base de datos (crea todas las tablas en orden)
+npm run migrate
+
+# Cargar datos de demostracion (usuarios de cada rol + agenda del medico)
+npm run seed
 
 # Iniciar en modo desarrollo
 npm run dev
@@ -107,6 +110,14 @@ npm run build
 npm run preview
 ```
 
+## Despliegue en la nube
+
+Para publicar el sistema completo y gratis (Neon + Vercel), sigue la guia paso a paso:
+**[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
+
+Incluye la creacion de la base de datos, migraciones, datos de demo, despliegue del
+backend y frontend, y los usuarios de prueba de cada rol.
+
 ## Variables de entorno
 
 El backend requiere las siguientes variables de entorno (ver `backend/.env.example`):
@@ -115,13 +126,14 @@ El backend requiere las siguientes variables de entorno (ver `backend/.env.examp
 |----------|-------------|---------|
 | `DATABASE_URL` | URL de conexion a PostgreSQL | `postgresql://user:password@host/dbname?sslmode=require` |
 | `JWT_SECRET` | Secreto para firmar tokens JWT | `your_jwt_secret_here` |
+| `JWT_REFRESH_SECRET` | Secreto para firmar refresh tokens | `your_refresh_secret_here` |
 | `JWT_EXPIRES_IN` | Tiempo de expiracion del token | `24h` |
 | `PORT` | Puerto del servidor | `3000` |
 | `SMTP_HOST` | Host del servidor SMTP | `smtp.example.com` |
 | `SMTP_PORT` | Puerto del servidor SMTP | `587` |
-| `SMTP_USER` | Usuario SMTP | `user@example.com` |
-| `SMTP_PASS` | Contrasena SMTP | `your_password` |
-| `SMTP_FROM` | Remitente de emails | `noreply@clinica.com` |
+| `SMTP_USER` | Usuario SMTP (vacio = no se envian emails) | `user@example.com` |
+| `SMTP_PASSWORD` | Contrasena SMTP | `your_password` |
+| `EMAIL_FROM` | Remitente de emails | `noreply@clinica.com` |
 | `FRONTEND_URL` | URL del frontend (para links en emails) | `http://localhost:5173` |
 | `NODE_ENV` | Entorno de ejecucion | `development` |
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const auth = require('../middleware/auth');
@@ -15,6 +16,8 @@ const env = require('../config/env');
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // Ensure the upload directory exists (multer does not create it).
+    fs.mkdirSync(env.uploadDir, { recursive: true });
     cb(null, env.uploadDir);
   },
   filename: (req, file, cb) => {
