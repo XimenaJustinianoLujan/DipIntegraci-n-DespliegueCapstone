@@ -44,7 +44,7 @@ export default function SundayShifts() {
     }
     setMessage('');
     try {
-      await api.post('/admin/turnos-domingo', { medico_id: selectedDoctor, fecha: selectedDate });
+      await api.post('/admin/turnos-domingo', { medico_ids: [selectedDoctor], fecha: selectedDate });
       setMessage('Medico asignado al turno dominical exitosamente');
       setSelectedDoctor('');
       setSelectedDate('');

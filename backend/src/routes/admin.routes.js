@@ -113,6 +113,66 @@ router.post('/turnos-domingo', async (req, res, next) => {
   }
 });
 
+// GET /api/admin/turnos-domingo - List upcoming Sunday emergency assignments
+// Sunday shifts are stored as agenda_medico rows (one per emergency block) created
+// by an admin; we group them by (medico, fecha) to show one assignment per row.
+router.get('/turnos-domingo', async (req, res, next) => {
+  try {
+    const result = await db.query(
+      `SELECT MIN(am.id::text) AS id,
+              am.medico_id,
+              am.fecha,
+              (m.nombre || ' ' || m.apellido) AS medico_nombre,
+              e.nombre AS especialidad
+       FROM agenda_medico am
+       JOIN medicos m ON m.id = am.medico_id
+       LEFT JOIN especialidades e ON e.id = m.especialidad_id
+       WHERE am.creado_por_rol = 'administrador'
+         AND EXTRACT(ISODOW FROM am.fecha) = 7
+         AND am.fecha >= CURRENT_DATE
+       GROUP BY am.medico_id, am.fecha, m.nombre, m.apellido, e.nombre
+       ORDER BY am.fecha ASC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/turnos-domingo/:id - Remove a Sunday assignment
+// Deletes every emergency block for the medico+fecha the given row belongs to.
+router.delete('/turnos-domingo/:id', async (req, res, next) => {
+  try {
+    const found = await db.query(
+      'SELECT medico_id, fecha FROM agenda_medico WHERE id = $1',
+      [req.params.id]
+    );
+    if (found.rows.length === 0) {
+      return res.status(404).json({ error: 'No encontrado', message: 'Asignacion no encontrada' });
+    }
+    const { medico_id, fecha } = found.rows[0];
+    const del = await db.query(
+      `DELETE FROM agenda_medico
+       WHERE medico_id = $1 AND fecha = $2 AND creado_por_rol = 'administrador'`,
+      [medico_id, fecha]
+    );
+
+    await AuditService.log({
+      usuario_id: req.user.id,
+      usuario_rol: 'administrador',
+      accion: 'REMOVER_TURNO_DOMINGO',
+      entidad: 'agenda_medico',
+      entidad_id: req.params.id,
+      datos_anteriores: { medico_id, fecha },
+      req,
+    });
+
+    res.json({ message: 'Asignacion removida', eliminados: del.rowCount });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/admin/medicos - List all doctors with their status
 router.get('/medicos', async (req, res, next) => {
   try {

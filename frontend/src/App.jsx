@@ -45,15 +45,21 @@ function HomeRedirect() {
   return <Navigate to={routes[user.role] || '/login'} replace />;
 }
 
+// Evita mostrar login/registro a un usuario ya autenticado: lo lleva a su panel.
+function PublicOnly({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <HomeRedirect /> : children;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Public routes (redirect to dashboard if already logged in) */}
+            <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
+            <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Home redirect */}
