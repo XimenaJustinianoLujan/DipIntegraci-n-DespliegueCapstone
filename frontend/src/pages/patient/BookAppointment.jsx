@@ -12,58 +12,61 @@ export default function BookAppointment() {
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        const response = await api.get('/medicos/especialidades');
+        setSpecialties(response.data || []);
+      } catch (err) {
+        setSpecialties([]);
+      }
+    };
     fetchSpecialties();
   }, []);
 
   useEffect(() => {
-    if (selectedSpecialty) {
-      fetchDoctors(selectedSpecialty);
-    } else {
+    if (!selectedSpecialty) {
       setDoctors([]);
       setSelectedDoctor('');
+      return;
     }
+    const fetchDoctors = async () => {
+      try {
+        const response = await api.get(`/medicos?especialidad_id=${selectedSpecialty}`);
+        setDoctors(response.data || []);
+      } catch (err) {
+        setDoctors([]);
+      }
+    };
+    fetchDoctors();
   }, [selectedSpecialty]);
 
   useEffect(() => {
-    if (selectedDoctor && selectedDate) {
-      fetchAvailableSlots(selectedDoctor, selectedDate);
-    } else {
+    if (!selectedDoctor || !selectedDate) {
       setAvailableSlots([]);
+      return;
     }
+    const fetchAvailableSlots = async () => {
+      setLoadingSlots(true);
+      setSelectedSlot('');
+      try {
+        const response = await api.get(
+          `/agenda/disponibilidad?medico_id=${selectedDoctor}&fecha=${selectedDate}`
+        );
+        setAvailableSlots(response.data || []);
+      } catch (err) {
+        setAvailableSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+    fetchAvailableSlots();
   }, [selectedDoctor, selectedDate]);
-
-  const fetchSpecialties = async () => {
-    try {
-      const response = await api.get('/medicos/especialidades');
-      setSpecialties(response.data || []);
-    } catch (err) {
-      // Fallback specialties if endpoint not available
-      setSpecialties([]);
-    }
-  };
-
-  const fetchDoctors = async (especialidadId) => {
-    try {
-      const response = await api.get(`/medicos?especialidad_id=${especialidadId}`);
-      setDoctors(response.data || []);
-    } catch (err) {
-      setDoctors([]);
-    }
-  };
-
-  const fetchAvailableSlots = async (doctorId, date) => {
-    try {
-      const response = await api.get(`/agenda/disponibilidad?medico_id=${doctorId}&fecha=${date}`);
-      setAvailableSlots(response.data || []);
-    } catch (err) {
-      setAvailableSlots([]);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,13 +74,11 @@ export default function BookAppointment() {
     setSuccess('');
 
     if (!selectedDoctor || !selectedDate || !selectedSlot) {
-      setError('Complete todos los campos');
+      setError('Complete todos los campos (especialidad, medico, fecha y horario).');
       return;
     }
-
-    const appointmentDate = dayjs(selectedDate);
-    if (appointmentDate.isBefore(dayjs(), 'day')) {
-      setError('No puede agendar citas en fechas pasadas');
+    if (dayjs(selectedDate).isBefore(dayjs(), 'day')) {
+      setError('No puede agendar citas en fechas pasadas.');
       return;
     }
 
@@ -89,16 +90,18 @@ export default function BookAppointment() {
         fecha: selectedDate,
         hora_inicio: selectedSlot,
       });
-      setSuccess('Cita agendada exitosamente con estado CONFIRMADA');
-      setTimeout(() => navigate('/paciente/mis-citas'), 2000);
+      setSuccess('Cita agendada exitosamente con estado CONFIRMADA.');
+      setTimeout(() => navigate('/paciente/mis-citas'), 1800);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al agendar la cita');
+      setError(err.response?.data?.message || 'Error al agendar la cita.');
     } finally {
       setLoading(false);
     }
   };
 
   const today = dayjs().format('YYYY-MM-DD');
+  const doctorName = doctors.find((d) => d.id === selectedDoctor);
+  const specialtyName = specialties.find((s) => s.id === selectedSpecialty);
 
   return (
     <div>
@@ -106,11 +109,10 @@ export default function BookAppointment() {
       <p style={styles.subtitle}>Seleccione especialidad, medico, fecha y horario disponible</p>
 
       {error && <div style={styles.error}>{error}</div>}
-      {success && <div style={styles.success}>{success}</div>}
+      {success && <div style={styles.success}>✓ {success}</div>}
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div style={styles.field}>
-          <label style={styles.label}>Especialidad</label>
+        <Step n="1" label="Especialidad">
           <select
             style={styles.select}
             value={selectedSpecialty}
@@ -118,15 +120,12 @@ export default function BookAppointment() {
           >
             <option value="">Seleccione una especialidad</option>
             {specialties.map((spec) => (
-              <option key={spec.id} value={spec.id}>
-                {spec.nombre}
-              </option>
+              <option key={spec.id} value={spec.id}>{spec.nombre}</option>
             ))}
           </select>
-        </div>
+        </Step>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Medico</label>
+        <Step n="2" label="Medico" disabled={!selectedSpecialty}>
           <select
             style={styles.select}
             value={selectedDoctor}
@@ -135,53 +134,64 @@ export default function BookAppointment() {
           >
             <option value="">Seleccione un medico</option>
             {doctors.map((doc) => (
-              <option key={doc.id} value={doc.id}>
-                Dr. {doc.nombre} {doc.apellido}
-              </option>
+              <option key={doc.id} value={doc.id}>Dr. {doc.nombre} {doc.apellido}</option>
             ))}
           </select>
-        </div>
+        </Step>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Fecha</label>
+        <Step n="3" label="Fecha" disabled={!selectedDoctor}>
           <input
             type="date"
-            style={styles.input}
+            style={styles.select}
             value={selectedDate}
             min={today}
             onChange={(e) => setSelectedDate(e.target.value)}
             disabled={!selectedDoctor}
           />
-        </div>
+        </Step>
 
-        <div style={styles.field}>
-          <label style={styles.label}>Horario disponible</label>
-          {availableSlots.length > 0 ? (
+        <Step n="4" label="Horario disponible" disabled={!selectedDate}>
+          {loadingSlots ? (
+            <p style={styles.noSlots}>Buscando horarios disponibles...</p>
+          ) : availableSlots.length > 0 ? (
             <div style={styles.slotsGrid}>
-              {availableSlots.map((slot) => (
-                <button
-                  key={slot.hora_inicio || slot}
-                  type="button"
-                  style={{
-                    ...styles.slotBtn,
-                    ...(selectedSlot === (slot.hora_inicio || slot) ? styles.slotBtnActive : {}),
-                  }}
-                  onClick={() => setSelectedSlot(slot.hora_inicio || slot)}
-                >
-                  {slot.hora_inicio || slot}
-                </button>
-              ))}
+              {availableSlots.map((slot) => {
+                const value = slot.hora_inicio || slot;
+                const active = selectedSlot === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    style={{ ...styles.slotBtn, ...(active ? styles.slotBtnActive : {}) }}
+                    onClick={() => setSelectedSlot(value)}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <p style={styles.noSlots}>
               {selectedDoctor && selectedDate
-                ? 'No hay horarios disponibles para esta fecha'
-                : 'Seleccione medico y fecha para ver horarios'}
+                ? 'No hay horarios disponibles para esta fecha.'
+                : 'Seleccione medico y fecha para ver horarios.'}
             </p>
           )}
-        </div>
+        </Step>
 
-        <button type="submit" style={styles.submitBtn} disabled={loading}>
+        {selectedSlot && (
+          <div style={styles.summary}>
+            <span style={styles.summaryIcon}>🗓️</span>
+            <span>
+              <strong>{specialtyName?.nombre}</strong> con{' '}
+              <strong>Dr. {doctorName?.nombre} {doctorName?.apellido}</strong>
+              <br />
+              {dayjs(selectedDate).format('DD/MM/YYYY')} a las {selectedSlot}
+            </span>
+          </div>
+        )}
+
+        <button type="submit" style={styles.submitBtn} disabled={loading || !selectedSlot}>
           {loading ? 'Agendando...' : 'Confirmar Cita'}
         </button>
       </form>
@@ -189,76 +199,113 @@ export default function BookAppointment() {
   );
 }
 
+function Step({ n, label, disabled, children }) {
+  return (
+    <div style={{ ...styles.step, ...(disabled ? styles.stepDisabled : {}) }}>
+      <div style={styles.stepLabel}>
+        <span style={styles.stepNum}>{n}</span>
+        <label style={styles.label}>{label}</label>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 const styles = {
-  title: { margin: '0 0 0.25rem', color: '#1e293b' },
-  subtitle: { margin: '0 0 1.5rem', color: '#64748b' },
+  title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
+  subtitle: { margin: '0 0 1.5rem', color: 'var(--color-text-muted)' },
   error: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: 'var(--color-danger-bg)',
     border: '1px solid #fecaca',
-    color: '#dc2626',
+    color: 'var(--color-danger)',
     padding: '0.75rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '1rem',
     fontSize: '0.85rem',
   },
   success: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: 'var(--color-success-bg)',
     border: '1px solid #bbf7d0',
-    color: '#16a34a',
+    color: 'var(--color-success)',
     padding: '0.75rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '1rem',
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
+    fontWeight: 600,
   },
   form: {
-    backgroundColor: 'white',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
     padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    maxWidth: '600px',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
+    maxWidth: '620px',
   },
-  field: { marginBottom: '1.25rem' },
-  label: { display: 'block', marginBottom: '0.3rem', color: '#374151', fontSize: '0.9rem', fontWeight: '500' },
+  step: { marginBottom: '1.5rem' },
+  stepDisabled: { opacity: 0.55 },
+  stepLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' },
+  stepNum: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-primary-50)',
+    color: 'var(--color-primary-dark)',
+    fontSize: '0.78rem',
+    fontWeight: 800,
+  },
+  label: { color: '#374151', fontSize: '0.9rem', fontWeight: 600 },
   select: {
     width: '100%',
-    padding: '0.6rem 0.75rem',
+    padding: '0.7rem 0.85rem',
     border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    fontSize: '0.9rem',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.92rem',
     boxSizing: 'border-box',
-  },
-  input: {
-    width: '100%',
-    padding: '0.6rem 0.75rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    fontSize: '0.9rem',
-    boxSizing: 'border-box',
+    backgroundColor: '#fff',
   },
   slotsGrid: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem' },
   slotBtn: {
     padding: '0.5rem 1rem',
     border: '1px solid #d1d5db',
-    borderRadius: '4px',
-    backgroundColor: 'white',
+    borderRadius: 'var(--radius-sm)',
+    backgroundColor: '#fff',
     cursor: 'pointer',
-    fontSize: '0.85rem',
+    fontSize: '0.88rem',
+    fontWeight: 600,
+    color: 'var(--color-text)',
   },
   slotBtnActive: {
-    backgroundColor: '#2563eb',
-    color: 'white',
-    borderColor: '#2563eb',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    borderColor: 'var(--color-primary)',
   },
-  noSlots: { color: '#64748b', fontSize: '0.85rem' },
+  noSlots: { color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 },
+  summary: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '1rem 1.25rem',
+    backgroundColor: 'var(--color-primary-50)',
+    border: '1px solid var(--color-primary-light)',
+    borderRadius: 'var(--radius-sm)',
+    marginBottom: '1.5rem',
+    fontSize: '0.9rem',
+    color: 'var(--color-text)',
+    lineHeight: 1.5,
+  },
+  summaryIcon: { fontSize: '1.4rem', flexShrink: 0 },
   submitBtn: {
     width: '100%',
-    padding: '0.75rem',
-    backgroundColor: '#2563eb',
+    padding: '0.8rem',
+    backgroundColor: 'var(--color-primary)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
-    fontSize: '1rem',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.98rem',
+    fontWeight: 600,
     cursor: 'pointer',
-    marginTop: '0.5rem',
   },
 };
