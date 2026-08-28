@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 export default function Unauthorized() {
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Acceso Denegado</h1>
-      <p style={styles.message}>No tiene permisos para acceder a esta pagina.</p>
-      <Link to="/" style={styles.link}>Volver al inicio</Link>
+      <div style={styles.card}>
+        <span style={styles.icon} aria-hidden="true">🔒</span>
+        <h1 style={styles.title}>Acceso denegado</h1>
+        <p style={styles.message}>No tiene permisos para acceder a esta pagina.</p>
+        <Link to="/" style={styles.link}>Volver al inicio</Link>
+      </div>
     </div>
   );
 }
@@ -13,19 +16,43 @@ export default function Unauthorized() {
 const styles = {
   container: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '50vh',
-    textAlign: 'center',
+    minHeight: 'calc(100vh - var(--header-h) - 160px)',
   },
-  title: { color: '#dc2626', fontSize: '2rem', margin: '0 0 1rem' },
-  message: { color: '#64748b', fontSize: '1.1rem', marginBottom: '1.5rem' },
+  card: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '0.5rem',
+    padding: '3rem 2.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+    boxShadow: 'var(--shadow)',
+    maxWidth: '420px',
+  },
+  icon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-danger-bg)',
+    fontSize: '1.8rem',
+    marginBottom: '0.5rem',
+  },
+  title: { color: 'var(--color-text)', fontSize: '1.6rem', margin: 0 },
+  message: { color: 'var(--color-text-muted)', fontSize: '1rem', margin: '0 0 1rem' },
   link: {
-    padding: '0.6rem 1.5rem',
-    backgroundColor: '#2563eb',
+    padding: '0.65rem 1.5rem',
+    backgroundColor: 'var(--color-primary)',
     color: 'white',
     textDecoration: 'none',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
+    fontWeight: 600,
+    fontSize: '0.9rem',
   },
 };
