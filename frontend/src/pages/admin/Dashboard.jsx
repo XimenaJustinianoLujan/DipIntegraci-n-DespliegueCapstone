@@ -1,23 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
+import WeeklyTrendChart from '../../components/charts/WeeklyTrendChart';
+
+const emptyStats = { doctors: 0, todayCitas: 0, porEstado: [], ultimos7dias: [] };
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ doctors: 0, todayCitas: 0 });
+  const [stats, setStats] = useState(emptyStats);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await api.get('/admin/stats');
-        setStats(response.data || { doctors: 0, todayCitas: 0 });
+        setStats({ ...emptyStats, ...response.data });
       } catch (err) {
         console.error('Error fetching admin stats:', err);
       }
     };
     fetchStats();
   }, []);
+
+  const porEstadoMap = useMemo(
+    () => Object.fromEntries(stats.porEstado.map((r) => [r.estado, r.count])),
+    [stats.porEstado]
+  );
 
   return (
     <div>
@@ -40,6 +49,19 @@ export default function AdminDashboard() {
             <span style={styles.statValue}>{stats.todayCitas}</span>
             <span style={styles.statLabel}>Citas hoy</span>
           </div>
+        </div>
+      </section>
+
+      <section style={styles.chartsGrid}>
+        <div style={styles.chartCard}>
+          <WeeklyTrendChart data={stats.ultimos7dias} title="Citas · ultimos 7 dias" />
+        </div>
+        <div style={styles.chartCard}>
+          <StatusBreakdownBar
+            counts={porEstadoMap}
+            title="Citas de hoy por estado"
+            emptyText="Aun no hay citas registradas para hoy."
+          />
         </div>
       </section>
 
@@ -68,7 +90,7 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '1rem',
-    marginBottom: '2.25rem',
+    marginBottom: '1.25rem',
   },
   statCard: {
     display: 'flex',
@@ -93,6 +115,19 @@ const styles = {
   },
   statValue: { display: 'block', fontSize: '1.9rem', fontWeight: 800, color: 'var(--color-text)', lineHeight: 1 },
   statLabel: { fontSize: '0.82rem', color: 'var(--color-text-muted)' },
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1rem',
+    marginBottom: '2.25rem',
+  },
+  chartCard: {
+    padding: '1.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
+  },
   sectionTitle: { margin: '0 0 1rem', color: 'var(--color-text)', fontSize: '1.15rem' },
   actions: {
     display: 'grid',

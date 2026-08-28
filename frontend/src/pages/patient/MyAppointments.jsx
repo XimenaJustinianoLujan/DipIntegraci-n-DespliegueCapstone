@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
 
 const statusColors = {
   CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
@@ -89,6 +90,12 @@ export default function MyAppointments() {
           );
         })}
       </div>
+
+      {!loading && appointments.length > 0 && (
+        <div style={styles.chartCard}>
+          <StatusBreakdownBar counts={counts} title="Resumen de mis citas" />
+        </div>
+      )}
 
       {loading ? (
         <div style={styles.skeletonWrap}>
@@ -183,6 +190,14 @@ const styles = {
     fontWeight: 700,
   },
   tabCountActive: { backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' },
+  chartCard: {
+    padding: '1.35rem 1.5rem',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
+  },
   list: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
   card: {
     display: 'flex',

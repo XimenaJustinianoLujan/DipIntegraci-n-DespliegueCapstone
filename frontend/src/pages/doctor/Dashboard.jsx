@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
 
 const statusColors = {
   CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
@@ -40,6 +41,12 @@ export default function DoctorDashboard() {
 
   const confirmadas = todayAppointments.filter((c) => c.estado === 'CONFIRMADA').length;
 
+  const countsByEstado = useMemo(() => {
+    const counts = {};
+    for (const c of todayAppointments) counts[c.estado] = (counts[c.estado] || 0) + 1;
+    return counts;
+  }, [todayAppointments]);
+
   return (
     <div>
       <header style={styles.head}>
@@ -67,6 +74,12 @@ export default function DoctorDashboard() {
           <span style={styles.actionDesc}>Complete fichas clinicas</span>
         </Link>
       </section>
+
+      {!loading && todayAppointments.length > 0 && (
+        <div style={styles.chartCard}>
+          <StatusBreakdownBar counts={countsByEstado} title="Citas de hoy por estado" />
+        </div>
+      )}
 
       <h2 style={styles.sectionTitle}>Citas de hoy</h2>
       {loading ? (
@@ -137,6 +150,14 @@ const styles = {
   actionIcon: { fontSize: '1.7rem' },
   actionLabel: { fontWeight: 700, fontSize: '0.98rem' },
   actionDesc: { fontSize: '0.8rem', color: 'var(--color-text-muted)' },
+  chartCard: {
+    padding: '1.35rem 1.5rem',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
+  },
   sectionTitle: { margin: '0 0 1rem', color: 'var(--color-text)', fontSize: '1.15rem' },
   list: { display: 'flex', flexDirection: 'column', gap: '0.6rem' },
   card: {

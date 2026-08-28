@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
+import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
 
 const statusColors = {
   CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
@@ -59,6 +60,12 @@ export default function SecretaryDashboard() {
     }
   };
 
+  const countsByEstado = useMemo(() => {
+    const counts = {};
+    for (const a of appointments) counts[a.estado] = (counts[a.estado] || 0) + 1;
+    return counts;
+  }, [appointments]);
+
   return (
     <div>
       <h1 style={styles.title}>Panel de Secretaria</h1>
@@ -79,6 +86,12 @@ export default function SecretaryDashboard() {
         />
         <span style={styles.counter}>{appointments.length} cita(s)</span>
       </div>
+
+      {!loading && appointments.length > 0 && (
+        <div style={styles.chartCard}>
+          <StatusBreakdownBar counts={countsByEstado} title="Citas del dia por estado" />
+        </div>
+      )}
 
       {loading ? (
         <div style={styles.skeleton} />
@@ -169,6 +182,14 @@ const styles = {
     borderRadius: 'var(--radius-full)',
     fontSize: '0.8rem',
     fontWeight: 700,
+  },
+  chartCard: {
+    padding: '1.35rem 1.5rem',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
   },
   tableContainer: {
     overflowX: 'auto',
