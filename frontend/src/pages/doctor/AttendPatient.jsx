@@ -39,7 +39,6 @@ export default function AttendPatient() {
       setMessage('Seleccione una cita para atender');
       return;
     }
-
     setSubmitting(true);
     setMessage('');
     try {
@@ -48,9 +47,7 @@ export default function AttendPatient() {
       formData.append('diagnostico', data.diagnostico);
       formData.append('indicaciones', data.indicaciones);
       formData.append('receta', data.receta);
-      if (file) {
-        formData.append('documento', file);
-      }
+      if (file) formData.append('documento', file);
 
       await api.post('/fichas-clinicas', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -72,16 +69,13 @@ export default function AttendPatient() {
     if (!window.confirm('Marcar como NO_SHOW (paciente no se presento)?')) return;
     try {
       await api.patch(`/citas/${appointmentId}/no-show`);
-      setAppointments((prev) =>
-        prev.filter((a) => a.id !== appointmentId)
-      );
+      setAppointments((prev) => prev.filter((a) => a.id !== appointmentId));
+      if (selectedAppointment?.id === appointmentId) setSelectedAppointment(null);
       setMessage('Cita marcada como NO_SHOW');
     } catch (err) {
       setMessage('Error al marcar como NO_SHOW');
     }
   };
-
-  if (loading) return <p>Cargando citas...</p>;
 
   return (
     <div>
@@ -94,90 +88,92 @@ export default function AttendPatient() {
 
       <div style={styles.columns}>
         <div style={styles.appointmentsList}>
-          <h3 style={styles.sectionTitle}>Citas Confirmadas de Hoy</h3>
-          {appointments.length === 0 ? (
-            <p style={styles.empty}>No hay citas pendientes para atender.</p>
+          <h3 style={styles.sectionTitle}>Citas confirmadas de hoy</h3>
+          {loading ? (
+            <p style={styles.empty}>Cargando...</p>
+          ) : appointments.length === 0 ? (
+            <div style={styles.emptyMini}>
+              <span style={styles.emptyIcon}>✅</span>
+              <p style={styles.empty}>No hay citas pendientes para atender.</p>
+            </div>
           ) : (
-            appointments.map((cita) => (
-              <div
-                key={cita.id}
-                style={{
-                  ...styles.appointmentCard,
-                  ...(selectedAppointment?.id === cita.id ? styles.selectedCard : {}),
-                }}
-                onClick={() => setSelectedAppointment(cita)}
-              >
-                <strong>{cita.paciente_nombre || 'Paciente'}</strong>
-                <span style={styles.appointmentTime}>{cita.hora_inicio}</span>
-                <button
-                  style={styles.noShowBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markNoShow(cita.id);
-                  }}
+            appointments.map((cita) => {
+              const active = selectedAppointment?.id === cita.id;
+              return (
+                <div
+                  key={cita.id}
+                  style={{ ...styles.appointmentCard, ...(active ? styles.selectedCard : {}) }}
+                  onClick={() => setSelectedAppointment(cita)}
                 >
-                  NO_SHOW
-                </button>
-              </div>
-            ))
+                  <div>
+                    <strong style={styles.patientName}>{cita.paciente_nombre || 'Paciente'}</strong>
+                    <span style={styles.apptTime}>🕐 {cita.hora_inicio}</span>
+                  </div>
+                  <button
+                    style={styles.noShowBtn}
+                    onClick={(e) => { e.stopPropagation(); markNoShow(cita.id); }}
+                  >
+                    NO_SHOW
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
 
         <div style={styles.formContainer}>
-          <h3 style={styles.sectionTitle}>Ficha Clinica</h3>
+          <h3 style={styles.sectionTitle}>Ficha clinica</h3>
           {selectedAppointment ? (
             <form onSubmit={handleSubmit(onSubmit)}>
-              <p style={styles.patientLabel}>
-                Paciente: <strong>{selectedAppointment.paciente_nombre || 'Paciente'}</strong>
-              </p>
+              <div style={styles.patientBanner}>
+                <span style={styles.bannerIcon}>🩺</span>
+                <span>
+                  Atendiendo a <strong>{selectedAppointment.paciente_nombre || 'Paciente'}</strong>
+                  {' · '}{selectedAppointment.hora_inicio}
+                </span>
+              </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Diagnostico</label>
+                <label style={styles.label}>Diagnostico *</label>
                 <textarea
                   style={styles.textarea}
                   rows="3"
+                  placeholder="Describa el diagnostico"
                   {...register('diagnostico', { required: 'El diagnostico es obligatorio' })}
                 />
-                {errors.diagnostico && (
-                  <span style={styles.fieldError}>{errors.diagnostico.message}</span>
-                )}
+                {errors.diagnostico && <span style={styles.fieldError}>{errors.diagnostico.message}</span>}
               </div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Indicaciones</label>
-                <textarea
-                  style={styles.textarea}
-                  rows="3"
-                  {...register('indicaciones')}
-                />
+                <textarea style={styles.textarea} rows="3" placeholder="Indicaciones para el paciente" {...register('indicaciones')} />
               </div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Receta</label>
-                <textarea
-                  style={styles.textarea}
-                  rows="3"
-                  {...register('receta')}
-                />
+                <textarea style={styles.textarea} rows="3" placeholder="Medicamentos y dosis" {...register('receta')} />
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>
-                  Documento adjunto (analisis, radiografias)
-                </label>
+                <label style={styles.label}>Documento adjunto (analisis, radiografias)</label>
                 <input
                   type="file"
                   onChange={(e) => setFile(e.target.files[0])}
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  style={styles.fileInput}
                 />
+                {file && <span style={styles.fileName}>📎 {file.name}</span>}
               </div>
 
               <button type="submit" style={styles.submitBtn} disabled={submitting}>
-                {submitting ? 'Guardando...' : 'Guardar Ficha y Completar Cita'}
+                {submitting ? 'Guardando...' : 'Guardar ficha y completar cita'}
               </button>
             </form>
           ) : (
-            <p style={styles.empty}>Seleccione una cita de la lista para completar la ficha clinica.</p>
+            <div style={styles.emptyMini}>
+              <span style={styles.emptyIcon}>👈</span>
+              <p style={styles.empty}>Seleccione una cita de la lista para completar la ficha clinica.</p>
+            </div>
           )}
         </div>
       </div>
@@ -186,91 +182,117 @@ export default function AttendPatient() {
 }
 
 const styles = {
-  title: { margin: '0 0 0.25rem', color: '#1e293b' },
-  subtitle: { margin: '0 0 1.5rem', color: '#64748b' },
+  title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
+  subtitle: { margin: '0 0 1.5rem', color: 'var(--color-text-muted)' },
   error: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: 'var(--color-danger-bg)',
     border: '1px solid #fecaca',
-    color: '#dc2626',
+    color: 'var(--color-danger)',
     padding: '0.75rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '1rem',
     fontSize: '0.85rem',
   },
   success: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: 'var(--color-success-bg)',
     border: '1px solid #bbf7d0',
-    color: '#16a34a',
+    color: 'var(--color-success)',
     padding: '0.75rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     marginBottom: '1rem',
     fontSize: '0.85rem',
+    fontWeight: 600,
   },
-  columns: { display: 'flex', gap: '1.5rem', flexWrap: 'wrap' },
+  columns: { display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' },
   appointmentsList: {
     flex: '0 0 300px',
-    backgroundColor: 'white',
-    padding: '1.5rem',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    padding: '1.35rem',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
   },
-  sectionTitle: { margin: '0 0 1rem', color: '#1e293b', fontSize: '1rem' },
-  empty: { color: '#64748b', fontSize: '0.9rem' },
+  sectionTitle: { margin: '0 0 1rem', color: 'var(--color-text)', fontSize: '1rem' },
+  empty: { color: 'var(--color-text-muted)', fontSize: '0.9rem', margin: 0 },
+  emptyMini: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '2rem 1rem',
+    textAlign: 'center',
+  },
+  emptyIcon: { fontSize: '1.9rem' },
   appointmentCard: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.75rem',
+    gap: '0.5rem',
+    padding: '0.85rem',
     marginBottom: '0.5rem',
-    border: '1px solid #e2e8f0',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    cursor: 'pointer',
+    transition: 'border-color 0.12s, background-color 0.12s',
+  },
+  selectedCard: { borderColor: 'var(--color-primary)', backgroundColor: 'var(--color-primary-50)' },
+  patientName: { display: 'block', fontSize: '0.9rem', color: 'var(--color-text)' },
+  apptTime: { fontSize: '0.78rem', color: 'var(--color-text-muted)' },
+  noShowBtn: {
+    padding: '0.25rem 0.55rem',
+    backgroundColor: 'var(--color-warning-bg)',
+    color: 'var(--color-warning)',
+    border: '1px solid #fde68a',
     borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '0.85rem',
-  },
-  selectedCard: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
-  },
-  appointmentTime: { color: '#64748b', fontSize: '0.8rem' },
-  noShowBtn: {
-    padding: '0.2rem 0.5rem',
-    backgroundColor: '#fef3c7',
-    color: '#d97706',
-    border: '1px solid #fde68a',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    fontSize: '0.7rem',
-    fontWeight: '600',
+    fontSize: '0.68rem',
+    fontWeight: 700,
+    flexShrink: 0,
   },
   formContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    padding: '1.5rem',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
     minWidth: '300px',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    padding: '1.5rem',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
   },
-  patientLabel: { marginBottom: '1rem', color: '#475569' },
+  patientBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    padding: '0.75rem 1rem',
+    backgroundColor: 'var(--color-primary-50)',
+    borderRadius: 'var(--radius-sm)',
+    marginBottom: '1.25rem',
+    fontSize: '0.9rem',
+    color: 'var(--color-text)',
+  },
+  bannerIcon: { fontSize: '1.2rem' },
   field: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '0.3rem', color: '#374151', fontSize: '0.9rem', fontWeight: '500' },
+  label: { display: 'block', marginBottom: '0.35rem', color: '#374151', fontSize: '0.88rem', fontWeight: 600 },
   textarea: {
     width: '100%',
-    padding: '0.6rem 0.75rem',
+    padding: '0.65rem 0.85rem',
     border: '1px solid #d1d5db',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     fontSize: '0.9rem',
     boxSizing: 'border-box',
     resize: 'vertical',
   },
-  fieldError: { color: '#dc2626', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
+  fileInput: { fontSize: '0.85rem' },
+  fileName: { display: 'block', marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--color-primary-dark)' },
+  fieldError: { color: 'var(--color-danger)', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' },
   submitBtn: {
     width: '100%',
-    padding: '0.75rem',
-    backgroundColor: '#16a34a',
+    padding: '0.8rem',
+    backgroundColor: 'var(--color-success)',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
-    fontSize: '1rem',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.95rem',
+    fontWeight: 600,
     cursor: 'pointer',
   },
 };
