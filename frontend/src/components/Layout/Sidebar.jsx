@@ -7,6 +7,7 @@ const sidebarLinks = {
     { to: '/paciente/agendar', label: 'Agendar Cita', icon: '📅' },
     { to: '/paciente/mis-citas', label: 'Mis Citas', icon: '📋' },
     { to: '/paciente/ficha-clinica', label: 'Ficha Clinica', icon: '📄' },
+    { to: '/paciente/perfil', label: 'Mi Perfil', icon: '👤' },
   ],
   medico: [
     { to: '/medico', label: 'Inicio', icon: '🏠' },

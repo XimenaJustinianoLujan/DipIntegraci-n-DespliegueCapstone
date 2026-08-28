@@ -36,12 +36,23 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // Merge updated fields into the current user and persist them, so changes like
+  // editing the profile name reflect immediately (e.g. in the header/greeting).
+  const updateUser = (fields) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...fields };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!user,
   };
 

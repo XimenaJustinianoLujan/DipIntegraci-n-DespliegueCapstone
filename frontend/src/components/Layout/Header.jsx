@@ -7,6 +7,7 @@ const navByRole = {
     { to: '/paciente/agendar', label: 'Agendar Cita' },
     { to: '/paciente/mis-citas', label: 'Mis Citas' },
     { to: '/paciente/ficha-clinica', label: 'Ficha Clinica' },
+    { to: '/paciente/perfil', label: 'Mi Perfil' },
   ],
   medico: [
     { to: '/medico', label: 'Dashboard' },

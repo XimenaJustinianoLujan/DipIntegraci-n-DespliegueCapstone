@@ -13,6 +13,7 @@ import PatientDashboard from './pages/patient/Dashboard';
 import BookAppointment from './pages/patient/BookAppointment';
 import MyAppointments from './pages/patient/MyAppointments';
 import MedicalRecord from './pages/patient/MedicalRecord';
+import Profile from './pages/patient/Profile';
 
 // Doctor pages
 import DoctorDashboard from './pages/doctor/Dashboard';
@@ -88,6 +89,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['paciente']}>
                   <MedicalRecord />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paciente/perfil"
+              element={
+                <ProtectedRoute allowedRoles={['paciente']}>
+                  <Profile />
                 </ProtectedRoute>
               }
             />
