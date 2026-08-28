@@ -39,7 +39,7 @@ export default function Sidebar() {
       : location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   return (
-    <aside style={styles.sidebar}>
+    <aside className="app-sidebar" style={styles.sidebar}>
       <p style={styles.sectionLabel}>Menu</p>
       <nav style={styles.nav}>
         {links.map((link) => {

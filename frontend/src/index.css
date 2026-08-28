@@ -234,3 +234,37 @@ main > * {
   .auth-card { grid-template-columns: 1fr; max-width: 460px; }
   .auth-form { padding: 2rem 1.5rem; }
 }
+
+/* ---- Navegacion responsive ---- */
+.mobile-menu-btn { display: none; }
+.mobile-menu-panel { display: none; }
+
+@media (max-width: 860px) {
+  .app-sidebar { display: none; }
+  /* Estos dos llevan estilos inline con display:flex; solo !important los gana. */
+  .desktop-nav-links { display: none !important; }
+  .header-user-box { display: none !important; }
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+  .mobile-menu-panel.open {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow);
+  }
+  main { padding: 1.25rem !important; }
+}

@@ -1,26 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const navByRole = {
   paciente: [
-    { to: '/paciente', label: 'Dashboard' },
-    { to: '/paciente/agendar', label: 'Agendar Cita' },
-    { to: '/paciente/mis-citas', label: 'Mis Citas' },
-    { to: '/paciente/ficha-clinica', label: 'Ficha Clinica' },
-    { to: '/paciente/perfil', label: 'Mi Perfil' },
+    { to: '/paciente', label: 'Dashboard', icon: '🏠' },
+    { to: '/paciente/agendar', label: 'Agendar Cita', icon: '📅' },
+    { to: '/paciente/mis-citas', label: 'Mis Citas', icon: '📋' },
+    { to: '/paciente/ficha-clinica', label: 'Ficha Clinica', icon: '📄' },
+    { to: '/paciente/perfil', label: 'Mi Perfil', icon: '👤' },
   ],
   medico: [
-    { to: '/medico', label: 'Dashboard' },
-    { to: '/medico/agenda', label: 'Mi Agenda' },
-    { to: '/medico/atender', label: 'Atender Paciente' },
+    { to: '/medico', label: 'Dashboard', icon: '🏠' },
+    { to: '/medico/agenda', label: 'Mi Agenda', icon: '📅' },
+    { to: '/medico/atender', label: 'Atender Paciente', icon: '🩺' },
   ],
   administrador: [
-    { to: '/admin', label: 'Dashboard' },
-    { to: '/admin/medicos', label: 'Gestionar Medicos' },
-    { to: '/admin/turnos-domingo', label: 'Turnos Domingo' },
+    { to: '/admin', label: 'Dashboard', icon: '🏠' },
+    { to: '/admin/medicos', label: 'Gestionar Medicos', icon: '👨‍⚕️' },
+    { to: '/admin/turnos-domingo', label: 'Turnos Domingo', icon: '🚑' },
   ],
   secretaria: [
-    { to: '/secretaria', label: 'Dashboard' },
+    { to: '/secretaria', label: 'Dashboard', icon: '🏠' },
   ],
 };
 
@@ -40,6 +41,12 @@ export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Cierra el menu movil al navegar a otra ruta.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -66,7 +73,7 @@ export default function Header() {
         <nav style={styles.nav}>
           {isAuthenticated ? (
             <>
-              <div style={styles.navLinks}>
+              <div className="desktop-nav-links" style={styles.navLinks}>
                 {links.map((link) => {
                   const active = isActive(link.to);
                   return (
@@ -81,7 +88,7 @@ export default function Header() {
                 })}
               </div>
 
-              <div style={styles.userBox}>
+              <div className="header-user-box" style={styles.userBox}>
                 <span style={styles.avatar}>{initials(user.nombre)}</span>
                 <span style={styles.userMeta}>
                   <span style={styles.userName}>{user.nombre}</span>
@@ -91,9 +98,18 @@ export default function Header() {
                   Salir
                 </button>
               </div>
+
+              <button
+                className="mobile-menu-btn"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
+                aria-expanded={menuOpen}
+              >
+                {menuOpen ? '✕' : '☰'}
+              </button>
             </>
           ) : (
-            <div style={styles.navLinks}>
+            <div className="desktop-nav-links" style={styles.navLinks}>
               <Link to="/login" style={styles.link}>Iniciar Sesion</Link>
               <Link to="/register" style={{ ...styles.link, ...styles.linkCta }}>
                 Registrarse
@@ -102,6 +118,36 @@ export default function Header() {
           )}
         </nav>
       </div>
+
+      {isAuthenticated && (
+        <div className={`mobile-menu-panel${menuOpen ? ' open' : ''}`}>
+          <div style={styles.mobileUser}>
+            <span style={styles.avatar}>{initials(user.nombre)}</span>
+            <span style={styles.userMeta}>
+              <span style={{ ...styles.userName, color: 'var(--color-text)' }}>{user.nombre}</span>
+              <span style={{ ...styles.userRole, color: 'var(--color-text-muted)' }}>
+                {roleLabels[user.role] || user.role}
+              </span>
+            </span>
+          </div>
+          {links.map((link) => {
+            const active = isActive(link.to);
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                style={{ ...styles.mobileLink, ...(active ? styles.mobileLinkActive : {}) }}
+              >
+                <span>{link.icon}</span>
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+          <button onClick={handleLogout} style={styles.mobileLogoutBtn}>
+            Cerrar sesion
+          </button>
+        </div>
+      )}
     </header>
   );
 }
@@ -202,5 +248,40 @@ const styles = {
     cursor: 'pointer',
     fontSize: '0.82rem',
     fontWeight: 600,
+  },
+  mobileUser: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    padding: '0.5rem 0.6rem 0.85rem',
+    borderBottom: '1px solid var(--color-border)',
+    marginBottom: '0.4rem',
+  },
+  mobileLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    padding: '0.7rem 0.75rem',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--color-text-muted)',
+    textDecoration: 'none',
+    fontSize: '0.92rem',
+    fontWeight: 500,
+  },
+  mobileLinkActive: {
+    backgroundColor: 'var(--color-primary-50)',
+    color: 'var(--color-primary-dark)',
+    fontWeight: 700,
+  },
+  mobileLogoutBtn: {
+    marginTop: '0.5rem',
+    padding: '0.65rem',
+    backgroundColor: 'var(--color-danger-bg)',
+    color: 'var(--color-danger)',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
 };
