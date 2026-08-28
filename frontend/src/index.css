@@ -173,3 +173,38 @@ main > * {
 @media (prefers-reduced-motion: reduce) {
   main > * { animation: none; }
 }
+
+/* ---- Autenticacion (login / registro) ---- */
+.auth-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - var(--header-h) - 130px);
+  padding: 1.5rem 0;
+}
+.auth-card {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  width: 100%;
+  max-width: 940px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.auth-brand {
+  background: linear-gradient(150deg, #2563eb 0%, #1e40af 100%);
+  color: #fff;
+  padding: 2.75rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.auth-form {
+  padding: 2.5rem;
+}
+@media (max-width: 780px) {
+  .auth-brand { display: none; }
+  .auth-card { grid-template-columns: 1fr; max-width: 460px; }
+  .auth-form { padding: 2rem 1.5rem; }
+}
