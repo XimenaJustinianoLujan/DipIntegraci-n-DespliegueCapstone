@@ -6,7 +6,8 @@ const AppointmentService = require('../services/appointmentService');
 const Medico = require('../models/Medico');
 const AgendaMedico = require('../models/AgendaMedico');
 const AuditService = require('../services/auditService');
-const { updateEstadoValidator } = require('../validators/medico.validator');
+const bcrypt = require('bcryptjs');
+const { createMedicoValidator, updateEstadoValidator } = require('../validators/medico.validator');
 const { cancelCitaValidator } = require('../validators/cita.validator');
 const validate = require('../middleware/validate');
 const db = require('../config/database');
@@ -201,6 +202,56 @@ router.get('/stats', async (req, res, next) => {
       todayCitas: todayResult.rows[0].count,
       porEstado: porEstadoResult.rows,
       ultimos7dias: ultimos7Result.rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/medicos - Create a new doctor account
+// El username se genera automaticamente (Medico.generateUsername: primera
+// letra del nombre + apellido, con reglas de desambiguacion si ya existe).
+// No hay flujo de invitacion/reset de contrasena en el sistema: el admin
+// define la contrasena inicial y se la comunica al medico por fuera.
+router.post('/medicos', createMedicoValidator, validate, async (req, res, next) => {
+  try {
+    const { nombre, apellido, segundo_apellido, email, telefono, password, especialidad_id } = req.body;
+
+    const existing = await Medico.findByEmail(email);
+    if (existing) {
+      return res.status(409).json({
+        error: 'ConflictError',
+        message: 'El email ya esta registrado',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    const medico = await Medico.create({
+      nombre,
+      apellido,
+      segundo_apellido,
+      email,
+      telefono,
+      password_hash,
+      especialidad_id,
+    });
+
+    await AuditService.log({
+      usuario_id: req.user.id,
+      usuario_rol: 'administrador',
+      accion: 'CREAR_MEDICO',
+      entidad: 'medicos',
+      entidad_id: medico.id,
+      datos_nuevos: { nombre, apellido, email, username: medico.username, especialidad_id },
+      req,
+    });
+
+    const { password_hash: _omit, ...medicoData } = medico;
+    res.status(201).json({
+      message: `Medico creado exitosamente. Username asignado: ${medico.username}`,
+      medico: medicoData,
     });
   } catch (error) {
     next(error);

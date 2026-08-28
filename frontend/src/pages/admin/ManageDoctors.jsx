@@ -10,14 +10,32 @@ const statusMeta = {
 };
 const statusOptions = ['ACTIVO', 'BAJA', 'VACACION'];
 
+const emptyForm = {
+  nombre: '',
+  apellido: '',
+  segundo_apellido: '',
+  email: '',
+  telefono: '',
+  password: '',
+  especialidad_id: '',
+};
+
 export default function ManageDoctors() {
   const [doctors, setDoctors] = useState([]);
+  const [especialidades, setEspecialidades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [message, setMessage] = useState('');
 
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [newDoctorInfo, setNewDoctorInfo] = useState(null);
+
   useEffect(() => {
     fetchDoctors();
+    fetchEspecialidades();
   }, []);
 
   const fetchDoctors = async () => {
@@ -28,6 +46,15 @@ export default function ManageDoctors() {
       console.error('Error fetching doctors:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEspecialidades = async () => {
+    try {
+      const response = await api.get('/medicos/especialidades');
+      setEspecialidades(response.data || []);
+    } catch (err) {
+      console.error('Error fetching especialidades:', err);
     }
   };
 
@@ -47,13 +74,191 @@ export default function ManageDoctors() {
     }
   };
 
+  const handleFormChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const openForm = () => {
+    setForm(emptyForm);
+    setFormError('');
+    setNewDoctorInfo(null);
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setFormError('');
+  };
+
+  const submitForm = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setSaving(true);
+    try {
+      const payload = {
+        nombre: form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        segundo_apellido: form.segundo_apellido.trim() || undefined,
+        email: form.email.trim(),
+        telefono: form.telefono.trim() || undefined,
+        password: form.password,
+        especialidad_id: form.especialidad_id || undefined,
+      };
+      const { data } = await api.post('/admin/medicos', payload);
+      setNewDoctorInfo({
+        nombre: data.medico.nombre,
+        apellido: data.medico.apellido,
+        username: data.medico.username,
+      });
+      setFormOpen(false);
+      fetchDoctors();
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Error al crear el medico');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
-      <h1 style={styles.title}>Gestionar Medicos</h1>
-      <p style={styles.subtitle}>Cambie el estado de los medicos: Activo, Baja o Vacacion</p>
+      <div style={styles.headRow}>
+        <div>
+          <h1 style={styles.title}>Gestionar Medicos</h1>
+          <p style={styles.subtitle}>Agregue medicos nuevos y cambie su estado: Activo, Baja o Vacacion</p>
+        </div>
+        <button style={styles.addBtn} onClick={formOpen ? closeForm : openForm}>
+          {formOpen ? 'Cancelar' : '+ Agregar Medico'}
+        </button>
+      </div>
 
       {message && (
-        <div style={message.includes('Error') ? styles.error : styles.success}>{message}</div>
+        <div className="alert-in" style={message.includes('Error') ? styles.error : styles.success}>{message}</div>
+      )}
+
+      {newDoctorInfo && (
+        <div className="alert-in" style={styles.successBox}>
+          <strong>Medico creado:</strong> Dr. {newDoctorInfo.nombre} {newDoctorInfo.apellido}
+          <br />
+          Su nombre de usuario para iniciar sesion es{' '}
+          <code style={styles.usernameTag}>{newDoctorInfo.username}</code>.
+          Comuniquele este usuario y la contrasena que definio — el sistema
+          no tiene un flujo de recuperacion de contrasena, asi que anotelos
+          en un lugar seguro.
+          <button style={styles.dismissBtn} onClick={() => setNewDoctorInfo(null)}>Entendido</button>
+        </div>
+      )}
+
+      {formOpen && (
+        <form onSubmit={submitForm} className="alert-in" style={styles.form}>
+          <h3 style={styles.formTitle}>Datos del nuevo medico</h3>
+          {formError && <div style={styles.error}>{formError}</div>}
+
+          <div style={styles.row}>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-nombre">Nombre *</label>
+              <input
+                id="new-medico-nombre"
+                name="nombre"
+                type="text"
+                style={styles.input}
+                value={form.nombre}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-apellido">Apellido *</label>
+              <input
+                id="new-medico-apellido"
+                name="apellido"
+                type="text"
+                style={styles.input}
+                value={form.apellido}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-segundo">Segundo apellido</label>
+              <input
+                id="new-medico-segundo"
+                name="segundo_apellido"
+                type="text"
+                style={styles.input}
+                value={form.segundo_apellido}
+                onChange={handleFormChange}
+              />
+            </div>
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-email">Email *</label>
+              <input
+                id="new-medico-email"
+                name="email"
+                type="email"
+                style={styles.input}
+                value={form.email}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-telefono">Telefono</label>
+              <input
+                id="new-medico-telefono"
+                name="telefono"
+                type="tel"
+                style={styles.input}
+                placeholder="78912345"
+                value={form.telefono}
+                onChange={handleFormChange}
+              />
+            </div>
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-especialidad">Especialidad</label>
+              <select
+                id="new-medico-especialidad"
+                name="especialidad_id"
+                style={styles.input}
+                value={form.especialidad_id}
+                onChange={handleFormChange}
+              >
+                <option value="">Sin especialidad</option>
+                {especialidades.map((esp) => (
+                  <option key={esp.id} value={esp.id}>{esp.nombre}</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label} htmlFor="new-medico-password">Contrasena inicial *</label>
+              <input
+                id="new-medico-password"
+                name="password"
+                type="password"
+                style={styles.input}
+                placeholder="Minimo 8, con 1 mayuscula y 1 numero"
+                value={form.password}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+          </div>
+
+          <p style={styles.hint}>
+            El nombre de usuario se genera automaticamente a partir del nombre
+            y apellido (ej. Juan Perez → jperez). Se lo mostraremos apenas se
+            cree la cuenta.
+          </p>
+
+          <button type="submit" style={styles.submitBtn} disabled={saving}>
+            {saving ? 'Creando...' : 'Crear Medico'}
+          </button>
+        </form>
       )}
 
       {loading ? (
@@ -122,8 +327,27 @@ export default function ManageDoctors() {
 }
 
 const styles = {
+  headRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    flexWrap: 'wrap',
+    marginBottom: '0.5rem',
+  },
   title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
   subtitle: { margin: '0 0 1.5rem', color: 'var(--color-text-muted)' },
+  addBtn: {
+    padding: '0.6rem 1.1rem',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    flexShrink: 0,
+  },
   error: {
     backgroundColor: 'var(--color-danger-bg)',
     border: '1px solid #fecaca',
@@ -142,6 +366,74 @@ const styles = {
     marginBottom: '1rem',
     fontSize: '0.85rem',
     fontWeight: 600,
+  },
+  successBox: {
+    backgroundColor: 'var(--color-success-bg)',
+    border: '1px solid #bbf7d0',
+    color: 'var(--color-text)',
+    padding: '1rem 1.25rem',
+    borderRadius: 'var(--radius-sm)',
+    marginBottom: '1.25rem',
+    fontSize: '0.88rem',
+    lineHeight: 1.6,
+    position: 'relative',
+  },
+  usernameTag: {
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '4px',
+    padding: '0.1rem 0.4rem',
+    fontWeight: 700,
+  },
+  dismissBtn: {
+    display: 'block',
+    marginTop: '0.6rem',
+    padding: '0.35rem 0.8rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    color: 'var(--color-text)',
+  },
+  form: {
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    boxShadow: 'var(--shadow-sm)',
+    padding: '1.5rem',
+    marginBottom: '1.5rem',
+    maxWidth: '720px',
+  },
+  formTitle: { margin: '0 0 1rem', color: 'var(--color-text)', fontSize: '1.05rem' },
+  row: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
+  field: { marginBottom: '1.1rem', flex: '1 1 180px' },
+  label: {
+    display: 'block',
+    marginBottom: '0.3rem',
+    color: 'var(--color-text)',
+    fontSize: '0.88rem',
+    fontWeight: 600,
+  },
+  input: {
+    width: '100%',
+    padding: '0.6rem 0.75rem',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.9rem',
+    boxSizing: 'border-box',
+  },
+  hint: { fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '0 0 1rem' },
+  submitBtn: {
+    padding: '0.65rem 1.5rem',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   tableContainer: {
     overflowX: 'auto',
