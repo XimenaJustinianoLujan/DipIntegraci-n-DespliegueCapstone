@@ -112,8 +112,9 @@ export default function BookAppointment() {
       {success && <div style={styles.success}>✓ {success}</div>}
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <Step n="1" label="Especialidad">
+        <Step n="1" label="Especialidad" htmlFor="book-especialidad">
           <select
+            id="book-especialidad"
             style={styles.select}
             value={selectedSpecialty}
             onChange={(e) => setSelectedSpecialty(e.target.value)}
@@ -125,8 +126,9 @@ export default function BookAppointment() {
           </select>
         </Step>
 
-        <Step n="2" label="Medico" disabled={!selectedSpecialty}>
+        <Step n="2" label="Medico" htmlFor="book-medico" disabled={!selectedSpecialty}>
           <select
+            id="book-medico"
             style={styles.select}
             value={selectedDoctor}
             onChange={(e) => setSelectedDoctor(e.target.value)}
@@ -139,8 +141,9 @@ export default function BookAppointment() {
           </select>
         </Step>
 
-        <Step n="3" label="Fecha" disabled={!selectedDoctor}>
+        <Step n="3" label="Fecha" htmlFor="book-fecha" disabled={!selectedDoctor}>
           <input
+            id="book-fecha"
             type="date"
             style={styles.select}
             value={selectedDate}
@@ -199,12 +202,12 @@ export default function BookAppointment() {
   );
 }
 
-function Step({ n, label, disabled, children }) {
+function Step({ n, label, htmlFor, disabled, children }) {
   return (
     <div style={{ ...styles.step, ...(disabled ? styles.stepDisabled : {}) }}>
       <div style={styles.stepLabel}>
         <span style={styles.stepNum}>{n}</span>
-        <label style={styles.label}>{label}</label>
+        <label style={styles.label} htmlFor={htmlFor}>{label}</label>
       </div>
       {children}
     </div>

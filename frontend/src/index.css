@@ -110,6 +110,15 @@ input:focus, select:focus, textarea:focus {
   background: rgba(37, 99, 235, 0.18);
 }
 
+/* Anillo de foco visible y consistente para navegacion por teclado
+   (no se activa con clic de mouse gracias a :focus-visible). */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Scrollbar discreta */
 * {
   scrollbar-width: thin;
@@ -233,6 +242,25 @@ main > * {
   .auth-brand { display: none; }
   .auth-card { grid-template-columns: 1fr; max-width: 460px; }
   .auth-form { padding: 2rem 1.5rem; }
+}
+
+/* ---- Accesibilidad: saltar navegacion ---- */
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -100px;
+  z-index: 100;
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0.75rem;
 }
 
 /* ---- Navegacion responsive ---- */

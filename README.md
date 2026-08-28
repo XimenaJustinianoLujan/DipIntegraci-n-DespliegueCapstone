@@ -2,6 +2,15 @@
 
 Sistema integral para la gestion de citas medicas en clinicas y consultorios. Permite a pacientes agendar citas, a medicos gestionar sus horarios y atender pacientes, y a administradores supervisar las operaciones de la clinica.
 
+## Demo en vivo
+
+| Recurso | URL |
+|---------|-----|
+| Aplicacion (frontend) | https://dip-integraci-n-despliegue-capstone.vercel.app |
+| API — health check | https://dipintegraci-n-desplieguecapstone-production.up.railway.app/api/health |
+
+Usuarios de prueba y guion de demostracion paso a paso en **[docs/GUION_DEMO.md](docs/GUION_DEMO.md)**.
+
 ## Caracteristicas principales
 
 - Registro y autenticacion de usuarios con verificacion por email
@@ -12,6 +21,9 @@ Sistema integral para la gestion de citas medicas en clinicas y consultorios. Pe
 - Notificaciones por email (confirmacion, recordatorios, cancelaciones)
 - Registro de auditoria de todas las operaciones
 - Control de acceso basado en roles (Paciente, Medico, Administrador, Secretaria)
+- Interfaz responsive (escritorio, tablet y movil) con menu de navegacion adaptable
+- Accesibilidad: labels vinculados a sus campos, foco de teclado visible y enlace
+  para saltar la navegacion
 
 ## Estructura del proyecto
 
@@ -112,11 +124,11 @@ npm run preview
 
 ## Despliegue en la nube
 
-Para publicar el sistema completo y gratis (Neon + Vercel), sigue la guia paso a paso:
-**[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
-
-Incluye la creacion de la base de datos, migraciones, datos de demo, despliegue del
-backend y frontend, y los usuarios de prueba de cada rol.
+La instancia de demostracion corre en **Railway** (backend con Docker + PostgreSQL,
+todo en el mismo proyecto) y **Vercel** (frontend). La guia paso a paso
+**[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)** documenta una ruta alternativa
+equivalente con Neon en vez de la base de Railway; los pasos de migraciones,
+seed y variables de entorno aplican igual en ambos casos.
 
 ## Variables de entorno
 

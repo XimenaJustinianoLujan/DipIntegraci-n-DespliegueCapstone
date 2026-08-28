@@ -104,15 +104,16 @@ export default function Profile() {
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.field}>
-          <label style={styles.label}>Email</label>
-          <input type="email" style={{ ...styles.input, ...styles.readonly }} value={email} disabled />
+          <label style={styles.label} htmlFor="profile-email">Email</label>
+          <input id="profile-email" type="email" style={{ ...styles.input, ...styles.readonly }} value={email} disabled />
           <span style={styles.hint}>El email no se puede modificar.</span>
         </div>
 
         <div style={styles.row}>
           <div style={styles.field}>
-            <label style={styles.label}>Nombre</label>
+            <label style={styles.label} htmlFor="profile-nombre">Nombre</label>
             <input
+              id="profile-nombre"
               type="text"
               name="nombre"
               style={styles.input}
@@ -122,8 +123,9 @@ export default function Profile() {
             />
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>Apellido</label>
+            <label style={styles.label} htmlFor="profile-apellido">Apellido</label>
             <input
+              id="profile-apellido"
               type="text"
               name="apellido"
               style={styles.input}
@@ -136,8 +138,9 @@ export default function Profile() {
 
         <div style={styles.row}>
           <div style={styles.field}>
-            <label style={styles.label}>Telefono</label>
+            <label style={styles.label} htmlFor="profile-telefono">Telefono</label>
             <input
+              id="profile-telefono"
               type="tel"
               name="telefono"
               style={styles.input}
@@ -147,8 +150,9 @@ export default function Profile() {
             />
           </div>
           <div style={styles.field}>
-            <label style={styles.label}>Fecha de nacimiento</label>
+            <label style={styles.label} htmlFor="profile-fecha">Fecha de nacimiento</label>
             <input
+              id="profile-fecha"
               type="date"
               name="fecha_nacimiento"
               style={styles.input}

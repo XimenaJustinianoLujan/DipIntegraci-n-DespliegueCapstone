@@ -125,6 +125,10 @@ Este es el corazon del capstone. Resalta:
 - **Calidad**: 46 pruebas automatizadas (Jest) que pasan.
 - **CI implicito**: cada `git push` a `main` redespliega backend (Railway) y frontend
   (Vercel) automaticamente.
+- **Diseno responsive y accesible**: un sistema de diseno unico (colores, tipografia,
+  componentes) en las 4 vistas por rol; navegacion con menu hamburguesa en movil/tablet;
+  labels vinculados a sus campos y enlace para saltar la navegacion (accesibilidad).
+  Muestra esto achicando la ventana del navegador en vivo.
 
 Cierra mostrando el repositorio en GitHub y la guia `docs/DESPLIEGUE.md`.
 

@@ -105,8 +105,9 @@ export default function Schedule() {
 
       <div style={styles.toolbar}>
         <div style={styles.weekSelector}>
-          <label style={styles.label}>Semana del</label>
+          <label style={styles.label} htmlFor="schedule-week">Semana del</label>
           <input
+            id="schedule-week"
             type="date"
             value={weekStart}
             onChange={(e) => setWeekStart(e.target.value)}

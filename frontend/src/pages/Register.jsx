@@ -77,8 +77,9 @@ export default function Register() {
             <>
               <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <div style={styles.field}>
-                  <label style={styles.label}>Nombre completo</label>
+                  <label style={styles.label} htmlFor="reg-nombre">Nombre completo</label>
                   <input
+                    id="reg-nombre"
                     type="text"
                     style={styles.input}
                     placeholder="Juan Perez"
@@ -92,8 +93,9 @@ export default function Register() {
                 </div>
 
                 <div style={styles.field}>
-                  <label style={styles.label}>Email</label>
+                  <label style={styles.label} htmlFor="reg-email">Email</label>
                   <input
+                    id="reg-email"
                     type="email"
                     style={styles.input}
                     placeholder="correo@ejemplo.com"
@@ -111,8 +113,9 @@ export default function Register() {
 
                 <div style={styles.row}>
                   <div style={styles.field}>
-                    <label style={styles.label}>Telefono</label>
+                    <label style={styles.label} htmlFor="reg-telefono">Telefono</label>
                     <input
+                      id="reg-telefono"
                       type="tel"
                       style={styles.input}
                       placeholder="78912345"
@@ -126,8 +129,9 @@ export default function Register() {
                   </div>
 
                   <div style={styles.field}>
-                    <label style={styles.label}>Fecha de nacimiento</label>
+                    <label style={styles.label} htmlFor="reg-fecha">Fecha de nacimiento</label>
                     <input
+                      id="reg-fecha"
                       type="date"
                       style={styles.input}
                       max={new Date().toISOString().slice(0, 10)}
@@ -142,9 +146,10 @@ export default function Register() {
                 </div>
 
                 <div style={styles.field}>
-                  <label style={styles.label}>Contrasena</label>
+                  <label style={styles.label} htmlFor="reg-password">Contrasena</label>
                   <div style={styles.passWrap}>
                     <input
+                      id="reg-password"
                       type={showPass ? 'text' : 'password'}
                       style={{ ...styles.input, paddingRight: '2.9rem' }}
                       placeholder="••••••••"

@@ -134,8 +134,9 @@ export default function AttendPatient() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Diagnostico *</label>
+                <label style={styles.label} htmlFor="attend-diagnostico">Diagnostico *</label>
                 <textarea
+                  id="attend-diagnostico"
                   style={styles.textarea}
                   rows="3"
                   placeholder="Describa el diagnostico"
@@ -145,18 +146,19 @@ export default function AttendPatient() {
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Indicaciones</label>
-                <textarea style={styles.textarea} rows="3" placeholder="Indicaciones para el paciente" {...register('indicaciones')} />
+                <label style={styles.label} htmlFor="attend-indicaciones">Indicaciones</label>
+                <textarea id="attend-indicaciones" style={styles.textarea} rows="3" placeholder="Indicaciones para el paciente" {...register('indicaciones')} />
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Receta</label>
-                <textarea style={styles.textarea} rows="3" placeholder="Medicamentos y dosis" {...register('receta')} />
+                <label style={styles.label} htmlFor="attend-receta">Receta</label>
+                <textarea id="attend-receta" style={styles.textarea} rows="3" placeholder="Medicamentos y dosis" {...register('receta')} />
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Documento adjunto (analisis, radiografias)</label>
+                <label style={styles.label} htmlFor="attend-documento">Documento adjunto (analisis, radiografias)</label>
                 <input
+                  id="attend-documento"
                   type="file"
                   onChange={(e) => setFile(e.target.files[0])}
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"

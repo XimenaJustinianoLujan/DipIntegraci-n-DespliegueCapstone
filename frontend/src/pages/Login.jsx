@@ -80,8 +80,9 @@ export default function Login() {
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div style={styles.field}>
-              <label style={styles.label}>Email</label>
+              <label style={styles.label} htmlFor="login-email">Email</label>
               <input
+                id="login-email"
                 type="email"
                 style={styles.input}
                 placeholder="correo@ejemplo.com"
@@ -98,9 +99,10 @@ export default function Login() {
             </div>
 
             <div style={styles.field}>
-              <label style={styles.label}>Contrasena</label>
+              <label style={styles.label} htmlFor="login-password">Contrasena</label>
               <div style={styles.passWrap}>
                 <input
+                  id="login-password"
                   type={showPass ? 'text' : 'password'}
                   style={{ ...styles.input, paddingRight: '2.9rem' }}
                   placeholder="••••••••"

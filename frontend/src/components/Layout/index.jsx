@@ -9,10 +9,12 @@ export default function Layout() {
 
   return (
     <div style={styles.container}>
+      {/* Permite saltar la navegacion repetitiva con teclado/lector de pantalla. */}
+      <a href="#main-content" className="skip-link">Saltar al contenido</a>
       <Header />
       <div style={styles.body}>
         {isAuthenticated && <Sidebar />}
-        <main style={styles.main}>
+        <main id="main-content" tabIndex={-1} style={styles.main}>
           <div style={styles.content}>
             <Outlet />
           </div>

@@ -69,8 +69,9 @@ export default function SecretaryDashboard() {
       )}
 
       <div style={styles.filterRow}>
-        <label style={styles.label}>📅 Filtrar por fecha:</label>
+        <label style={styles.label} htmlFor="secretary-filter-date">📅 Filtrar por fecha:</label>
         <input
+          id="secretary-filter-date"
           type="date"
           value={filterDate}
           onChange={(e) => setFilterDate(e.target.value)}
