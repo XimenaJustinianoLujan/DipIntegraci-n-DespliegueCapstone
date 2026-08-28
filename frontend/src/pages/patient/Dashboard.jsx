@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { EmptyCalendar } from '../../components/illustrations/EmptyState';
 
 const statusColors = {
   CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
@@ -74,7 +75,7 @@ export default function PatientDashboard() {
         </div>
       ) : appointments.length === 0 ? (
         <div style={styles.emptyCard}>
-          <span style={styles.emptyIcon}>🗓️</span>
+          <EmptyCalendar size={72} />
           <p style={styles.emptyText}>No tiene citas confirmadas.</p>
           <Link to="/paciente/agendar" style={styles.emptyBtn}>Agendar una cita</Link>
         </div>

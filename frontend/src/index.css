@@ -130,10 +130,18 @@ a:hover {
 button {
   font-family: inherit;
   cursor: pointer;
+  transition: transform 0.08s ease;
 }
 button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+/* Feedback tactil: leve "hundimiento" al presionar cualquier boton habilitado. */
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active { transform: none; }
 }
 
 input, select, textarea {
@@ -252,6 +260,41 @@ main > * {
 
 @media (prefers-reduced-motion: reduce) {
   main > * { animation: none; }
+}
+
+/* ---- Ilustracion de exito (agendar cita, etc.) ---- */
+.success-burst-ring {
+  animation: successRingPulse 1.4s ease-out infinite;
+  transform-origin: center;
+}
+.success-burst-check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: successCheckDraw 0.45s 0.15s ease-out forwards;
+}
+@keyframes successRingPulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  70% { transform: scale(1.15); opacity: 0; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+@keyframes successCheckDraw {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-burst-ring { animation: none; opacity: 0; }
+  .success-burst-check { animation: none; stroke-dashoffset: 0; }
+}
+
+/* ---- Alertas (mensajes de error/exito) ---- */
+.alert-in {
+  animation: alertSlideIn 0.22s ease both;
+}
+@keyframes alertSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-in { animation: none; }
 }
 
 /* ---- Autenticacion (login / registro) ---- */

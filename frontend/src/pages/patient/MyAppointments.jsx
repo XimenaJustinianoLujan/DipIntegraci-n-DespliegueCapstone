@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
+import { EmptyFolder } from '../../components/illustrations/EmptyState';
 
 const statusColors = {
   CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
@@ -103,7 +104,7 @@ export default function MyAppointments() {
         </div>
       ) : visible.length === 0 ? (
         <div style={styles.emptyCard}>
-          <span style={styles.emptyIcon}>🗂️</span>
+          <EmptyFolder size={72} />
           <p style={styles.emptyText}>No hay citas en esta categoria.</p>
         </div>
       ) : (

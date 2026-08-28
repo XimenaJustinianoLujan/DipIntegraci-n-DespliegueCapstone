@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { EmptyClipboard } from '../../components/illustrations/EmptyState';
 
 function initials(name = '') {
   const parts = name.trim().split(/\s+/);
@@ -48,7 +49,7 @@ export default function MedicalRecord() {
         </div>
       ) : records.length === 0 ? (
         <div style={styles.emptyCard}>
-          <span style={styles.emptyIcon}>📄</span>
+          <EmptyClipboard size={80} />
           <p style={styles.emptyText}>Aun no tiene atenciones registradas.</p>
           <p style={styles.emptyHint}>
             Su historial clinico aparecera aqui despues de su primera consulta.

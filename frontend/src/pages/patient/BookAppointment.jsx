@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import dayjs from 'dayjs';
+import { SuccessBurst } from '../../components/illustrations/EmptyState';
 
 export default function BookAppointment() {
   const navigate = useNavigate();
@@ -88,7 +89,10 @@ export default function BookAppointment() {
         medico_id: selectedDoctor,
         especialidad_id: selectedSpecialty,
         fecha: selectedDate,
-        hora_inicio: selectedSlot,
+        // El backend valida hora_inicio como HH:MM exacto, pero la agenda
+        // devuelve HH:MM:SS (formato TIME de Postgres) -> normalizar aqui,
+        // que es el unico punto donde arma el payload de creacion de cita.
+        hora_inicio: selectedSlot.slice(0, 5),
       });
       setSuccess('Cita agendada exitosamente con estado CONFIRMADA.');
       setTimeout(() => navigate('/paciente/mis-citas'), 1800);
@@ -103,13 +107,23 @@ export default function BookAppointment() {
   const doctorName = doctors.find((d) => d.id === selectedDoctor);
   const specialtyName = specialties.find((s) => s.id === selectedSpecialty);
 
+  if (success) {
+    return (
+      <div style={styles.successPanel}>
+        <SuccessBurst />
+        <h2 style={styles.successTitle}>¡Cita confirmada!</h2>
+        <p style={styles.successText}>{success}</p>
+        <p style={styles.successHint}>Redirigiendo a Mis Citas...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 style={styles.title}>Agendar Cita</h1>
       <p style={styles.subtitle}>Seleccione especialidad, medico, fecha y horario disponible</p>
 
-      {error && <div style={styles.error}>{error}</div>}
-      {success && <div style={styles.success}>✓ {success}</div>}
+      {error && <div className="alert-in" style={styles.error}>{error}</div>}
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <Step n="1" label="Especialidad" htmlFor="book-especialidad">
@@ -226,16 +240,23 @@ const styles = {
     marginBottom: '1rem',
     fontSize: '0.85rem',
   },
-  success: {
-    backgroundColor: 'var(--color-success-bg)',
-    border: '1px solid #bbf7d0',
-    color: 'var(--color-success)',
-    padding: '0.75rem',
-    borderRadius: 'var(--radius-sm)',
-    marginBottom: '1rem',
-    fontSize: '0.9rem',
-    fontWeight: 600,
+  successPanel: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '0.4rem',
+    padding: '3rem 1.5rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+    boxShadow: 'var(--shadow)',
+    maxWidth: '460px',
+    margin: '2rem auto',
   },
+  successTitle: { margin: '0.75rem 0 0', color: 'var(--color-text)', fontSize: '1.4rem' },
+  successText: { margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem' },
+  successHint: { margin: '0.5rem 0 0', color: 'var(--color-text-subtle)', fontSize: '0.82rem' },
   form: {
     backgroundColor: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
