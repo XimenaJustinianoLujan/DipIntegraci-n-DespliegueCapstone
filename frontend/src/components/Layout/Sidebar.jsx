@@ -31,23 +31,32 @@ export default function Sidebar() {
   if (!user) return null;
 
   const links = sidebarLinks[user.role] || [];
+  const homePath = `/${user.role === 'administrador' ? 'admin' : user.role}`;
+
+  const isActive = (to) =>
+    to === homePath
+      ? location.pathname === to
+      : location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   return (
     <aside style={styles.sidebar}>
-      <nav>
-        {links.map((link) => (
-          <Link
-            key={link.to}
-            to={link.to}
-            style={{
-              ...styles.link,
-              ...(location.pathname === link.to ? styles.activeLink : {}),
-            }}
-          >
-            <span>{link.icon}</span>
-            <span>{link.label}</span>
-          </Link>
-        ))}
+      <p style={styles.sectionLabel}>Menu</p>
+      <nav style={styles.nav}>
+        {links.map((link) => {
+          const active = isActive(link.to);
+          return (
+            <Link
+              key={link.to}
+              to={link.to}
+              style={{ ...styles.link, ...(active ? styles.activeLink : {}) }}
+            >
+              <span style={{ ...styles.iconTile, ...(active ? styles.iconTileActive : {}) }}>
+                {link.icon}
+              </span>
+              <span>{link.label}</span>
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
@@ -55,26 +64,55 @@ export default function Sidebar() {
 
 const styles = {
   sidebar: {
-    width: '220px',
-    backgroundColor: '#f8fafc',
-    borderRight: '1px solid #e2e8f0',
-    padding: '1rem 0',
-    minHeight: 'calc(100vh - 130px)',
+    width: 'var(--sidebar-w)',
+    flexShrink: 0,
+    backgroundColor: 'var(--color-surface)',
+    borderRight: '1px solid var(--color-border)',
+    padding: '1.25rem 0.75rem',
+    minHeight: 'calc(100vh - var(--header-h))',
+    position: 'sticky',
+    top: 'var(--header-h)',
+    alignSelf: 'flex-start',
   },
+  sectionLabel: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--color-text-subtle)',
+    padding: '0 0.75rem',
+    marginBottom: '0.6rem',
+  },
+  nav: { display: 'flex', flexDirection: 'column', gap: '0.15rem' },
   link: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.75rem 1.5rem',
+    gap: '0.7rem',
+    padding: '0.55rem 0.75rem',
     textDecoration: 'none',
-    color: '#475569',
+    color: 'var(--color-text-muted)',
     fontSize: '0.9rem',
-    transition: 'background-color 0.2s',
+    fontWeight: 500,
+    borderRadius: 'var(--radius-sm)',
+    transition: 'background-color 0.15s ease, color 0.15s ease',
   },
   activeLink: {
-    backgroundColor: '#e0e7ff',
-    color: '#2563eb',
-    fontWeight: '600',
-    borderRight: '3px solid #2563eb',
+    backgroundColor: 'var(--color-primary-50)',
+    color: 'var(--color-primary-dark)',
+    fontWeight: 600,
+  },
+  iconTile: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30px',
+    height: '30px',
+    borderRadius: '8px',
+    backgroundColor: 'var(--color-surface-2)',
+    fontSize: '0.95rem',
+    flexShrink: 0,
+  },
+  iconTileActive: {
+    backgroundColor: 'var(--color-primary-light)',
   },
 };
