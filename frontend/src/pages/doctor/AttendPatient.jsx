@@ -273,11 +273,11 @@ const styles = {
   },
   bannerIcon: { fontSize: '1.2rem' },
   field: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '0.35rem', color: '#374151', fontSize: '0.88rem', fontWeight: 600 },
+  label: { display: 'block', marginBottom: '0.35rem', color: 'var(--color-text)', fontSize: '0.88rem', fontWeight: 600 },
   textarea: {
     width: '100%',
     padding: '0.65rem 0.85rem',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.9rem',
     boxSizing: 'border-box',

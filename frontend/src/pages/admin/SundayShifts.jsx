@@ -171,11 +171,11 @@ const styles = {
   formRow: { display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' },
   select: {
     padding: '0.65rem 0.75rem',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.9rem',
     minWidth: '220px',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--color-surface)',
   },
   assignBtn: {
     padding: '0.65rem 1.5rem',
@@ -218,7 +218,7 @@ const styles = {
   },
   removeBtn: {
     padding: '0.35rem 0.7rem',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--color-surface)',
     color: 'var(--color-danger)',
     border: '1px solid #fecaca',
     borderRadius: 'var(--radius-sm)',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const navByRole = {
   paciente: [
@@ -39,9 +40,11 @@ function initials(name = '') {
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isDark = theme === 'dark';
 
   // Cierra el menu movil al navegar a otra ruta.
   useEffect(() => {
@@ -66,7 +69,7 @@ export default function Header() {
         <Link to="/" style={styles.brand}>
           <span style={styles.logo} aria-hidden="true">✚</span>
           <span style={styles.brandText}>
-            Vitalia <span style={styles.brandThin}>Citas</span>
+            JOX <span style={styles.brandThin}>Citas</span>
           </span>
         </Link>
 
@@ -100,6 +103,15 @@ export default function Header() {
               </div>
 
               <button
+                onClick={toggleTheme}
+                style={styles.themeBtn}
+                aria-label={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+                title={isDark ? 'Tema claro' : 'Tema oscuro'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
+
+              <button
                 className="mobile-menu-btn"
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
@@ -109,7 +121,15 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <div className="desktop-nav-links" style={styles.navLinks}>
+            <div style={styles.navLinks}>
+              <button
+                onClick={toggleTheme}
+                style={styles.themeBtn}
+                aria-label={isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+                title={isDark ? 'Tema claro' : 'Tema oscuro'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
               <Link to="/login" style={styles.link}>Iniciar Sesion</Link>
               <Link to="/register" style={{ ...styles.link, ...styles.linkCta }}>
                 Registrarse
@@ -143,6 +163,10 @@ export default function Header() {
               </Link>
             );
           })}
+          <button onClick={toggleTheme} style={styles.mobileThemeBtn}>
+            <span>{isDark ? '☀️' : '🌙'}</span>
+            <span>{isDark ? 'Tema claro' : 'Tema oscuro'}</span>
+          </button>
           <button onClick={handleLogout} style={styles.mobileLogoutBtn}>
             Cerrar sesion
           </button>
@@ -272,6 +296,35 @@ const styles = {
     backgroundColor: 'var(--color-primary-50)',
     color: 'var(--color-primary-dark)',
     fontWeight: 700,
+  },
+  themeBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    border: '1px solid rgba(255,255,255,0.24)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    flexShrink: 0,
+  },
+  mobileThemeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    marginTop: '0.4rem',
+    padding: '0.7rem 0.75rem',
+    backgroundColor: 'var(--color-surface-2)',
+    color: 'var(--color-text)',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.9rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    textAlign: 'left',
   },
   mobileLogoutBtn: {
     marginTop: '0.5rem',

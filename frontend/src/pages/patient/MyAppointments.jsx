@@ -216,7 +216,7 @@ const styles = {
   cardRight: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
   cancelBtn: {
     padding: '0.42rem 0.85rem',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--color-surface)',
     color: 'var(--color-danger)',
     border: '1px solid #fecaca',
     borderRadius: 'var(--radius-sm)',
@@ -228,7 +228,7 @@ const styles = {
   skeleton: {
     height: '84px',
     borderRadius: 'var(--radius)',
-    background: 'linear-gradient(90deg, #eef2f7 25%, #f6f8fb 50%, #eef2f7 75%)',
+    background: 'linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.3s ease infinite',
   },

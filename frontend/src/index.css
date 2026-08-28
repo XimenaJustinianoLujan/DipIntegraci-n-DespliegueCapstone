@@ -47,12 +47,56 @@
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+
+  /* Le dice al navegador que use NUESTRO tema (no el del SO) para estilar
+     controles nativos (inputs, select, scrollbar, date/color pickers). */
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* ---- Tema oscuro ----
+   Se activa fijando data-theme="dark" en <html> (ver ThemeContext.jsx). Solo
+   redefine los tokens; todos los componentes ya usan var(--color-*), asi que
+   heredan el cambio automaticamente sin tocar cada archivo. */
+:root[data-theme='dark'] {
+  --color-primary-light: #1e3a5f;
+  --color-primary-50: #16213f;
+  --color-primary-dark: #7bb0ff;
+  --color-accent: #2dd4bf;
+
+  --color-bg: #0b1220;
+  --color-surface: #121a2e;
+  --color-surface-2: #182543;
+  --color-border: #283354;
+  --color-text: #eef2ff;
+  --color-text-muted: #9aa5c7;
+  --color-text-subtle: #6c7899;
+
+  --color-success-bg: rgba(22, 163, 74, 0.16);
+  --color-warning-bg: rgba(217, 119, 6, 0.18);
+  --color-danger-bg: rgba(220, 38, 38, 0.18);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow: 0 6px 18px rgba(0, 0, 0, .45);
+  --shadow-lg: 0 16px 38px rgba(0, 0, 0, .55);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Transicion suave al cambiar de tema (desactivada si el usuario prefiere
+   menos movimiento). */
+body, .card, header, aside, footer, table, input, select, textarea {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body, .card, header, aside, footer, table, input, select, textarea { transition: none; }
 }
 
 html {
@@ -96,6 +140,7 @@ input, select, textarea {
   font-family: inherit;
   font-size: 0.92rem;
   color: var(--color-text);
+  background-color: var(--color-surface);
 }
 input::placeholder, textarea::placeholder {
   color: var(--color-text-subtle);

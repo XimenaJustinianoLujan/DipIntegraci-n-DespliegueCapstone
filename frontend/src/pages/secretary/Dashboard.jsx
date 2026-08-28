@@ -155,10 +155,10 @@ const styles = {
     fontWeight: 600,
   },
   filterRow: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-  label: { fontSize: '0.9rem', color: '#374151', fontWeight: 600 },
+  label: { fontSize: '0.9rem', color: 'var(--color-text)', fontWeight: 600 },
   dateInput: {
     padding: '0.55rem 0.75rem',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.9rem',
   },
@@ -218,7 +218,7 @@ const styles = {
   skeleton: {
     height: '220px',
     borderRadius: 'var(--radius)',
-    background: 'linear-gradient(90deg, #eef2f7 25%, #f6f8fb 50%, #eef2f7 75%)',
+    background: 'linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.3s ease infinite',
   },

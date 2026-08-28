@@ -44,7 +44,7 @@ export default function Register() {
         <aside className="auth-brand">
           <div style={styles.brandTop}>
             <span style={styles.logo} aria-hidden="true">✚</span>
-            <span style={styles.brandName}>Vitalia Citas</span>
+            <span style={styles.brandName}>JOX Citas</span>
           </div>
           <h2 style={styles.brandHeading}>Cree su cuenta de paciente</h2>
           <p style={styles.brandText}>
@@ -243,14 +243,14 @@ const styles = {
   label: {
     display: 'block',
     marginBottom: '0.35rem',
-    color: '#374151',
+    color: 'var(--color-text)',
     fontSize: '0.88rem',
     fontWeight: 500,
   },
   input: {
     width: '100%',
     padding: '0.7rem 0.85rem',
-    border: '1px solid #d1d5db',
+    border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.92rem',
     boxSizing: 'border-box',

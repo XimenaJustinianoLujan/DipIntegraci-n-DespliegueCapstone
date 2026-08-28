@@ -4,7 +4,7 @@ export default function Footer() {
       <div style={styles.inner}>
         <span style={styles.brand}>
           <span style={styles.dot} aria-hidden="true">✚</span>
-          Vitalia Citas
+          JOX Citas
         </span>
         <span style={styles.copy}>
           &copy; {new Date().getFullYear()} Plataforma de Citas Medicas · Todos los derechos reservados
