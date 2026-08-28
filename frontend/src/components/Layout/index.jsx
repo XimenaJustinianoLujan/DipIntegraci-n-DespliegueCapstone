@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
+import CommandPalette from '../CommandPalette';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Layout() {
@@ -21,6 +22,7 @@ export default function Layout() {
         </main>
       </div>
       <Footer />
+      <CommandPalette />
     </div>
   );
 }

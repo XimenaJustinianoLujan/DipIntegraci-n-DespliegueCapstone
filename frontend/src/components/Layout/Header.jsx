@@ -91,6 +91,16 @@ export default function Header() {
                 })}
               </div>
 
+              <button
+                className="desktop-nav-links"
+                onClick={() => window.dispatchEvent(new CustomEvent('jox:open-command-palette'))}
+                style={styles.cmdkBtn}
+                title="Buscar acciones (Ctrl+K)"
+              >
+                <span aria-hidden="true">🔍</span>
+                <kbd style={styles.cmdkKbd}>Ctrl K</kbd>
+              </button>
+
               <div className="header-user-box" style={styles.userBox}>
                 <span style={styles.avatar}>{initials(user.nombre)}</span>
                 <span style={styles.userMeta}>
@@ -296,6 +306,25 @@ const styles = {
     backgroundColor: 'var(--color-primary-50)',
     color: 'var(--color-primary-dark)',
     fontWeight: 700,
+  },
+  cmdkBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.4rem 0.65rem',
+    borderRadius: 'var(--radius-full)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: '0.85rem',
+    flexShrink: 0,
+  },
+  cmdkKbd: {
+    fontFamily: 'inherit',
+    fontSize: '0.68rem',
+    border: '1px solid rgba(255,255,255,0.3)',
+    borderRadius: '4px',
+    padding: '0.1rem 0.35rem',
   },
   themeBtn: {
     display: 'inline-flex',
