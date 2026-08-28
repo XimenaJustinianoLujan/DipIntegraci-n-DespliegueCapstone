@@ -161,10 +161,36 @@ input:focus, select:focus, textarea:focus {
   background: var(--color-primary-dark);
 }
 
+/* Elevacion al pasar el mouse (tarjetas clicables) */
+.lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: #cdd7e5;
+}
+
+/* Barra de estado (chips de estado de cita) — clases utilitarias */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* ---- Transicion de entrada de cada vista ---- */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 main > * {
   animation: fadeInUp 0.25s ease both;
