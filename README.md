@@ -59,10 +59,13 @@ gestionClinica-app/
 │   ├── vite.config.js
 │   └── package.json
 ├── docs/                    # Documentacion del proyecto
-│   ├── SDD-v2.md           # Documento de diseno del sistema
-│   ├── DBD-v2.md           # Documento de diseno de base de datos
-│   ├── BDD.md              # Escenarios BDD en Gherkin (espanol)
-│   └── Diagramas.md        # Diagramas de secuencia
+│   ├── SDD-v3.md           # Diseno del sistema (fiel al codigo actual)
+│   ├── DBD-v3.md           # Diseno de base de datos (fiel al codigo actual)
+│   ├── BDD-v2.md           # Escenarios BDD en Gherkin, fieles al codigo
+│   ├── Diagramas-v2.md     # Diagramas de secuencia, fieles al codigo
+│   ├── SDD-v2.md, DBD-v2.md, BDD.md, Diagramas.md  # versiones anteriores (historial)
+│   ├── DESPLIEGUE.md       # guia de despliegue paso a paso
+│   └── GUION_DEMO.md       # guion de demostracion por rol
 └── README.md
 ```
 
@@ -160,7 +163,7 @@ El backend requiere las siguientes variables de entorno (ver `backend/.env.examp
 - `POST /api/agenda` - Cargar horario de medico
 - `POST /api/fichas-clinicas` - Crear ficha clinica
 
-Para la documentacion completa de endpoints, ver `docs/SDD-v2.md`.
+Para la documentacion completa de endpoints, ver `docs/SDD-v3.md`.
 
 ## Tecnologias
 
