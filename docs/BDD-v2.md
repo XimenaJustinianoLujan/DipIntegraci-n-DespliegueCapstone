@@ -46,6 +46,16 @@ eso.
 - `GET /api/admin/stats` (panel de administracion con metricas reales) — **este endpoint no existia en absoluto hasta esta version**: el panel de admin llamaba a una ruta que devolvia 404 silenciosamente y siempre mostraba "0" en todo, sin importar los datos reales.
 - Existe una **ruta duplicada** para cambiar el estado de un medico: `PUT /api/medicos/:id/estado` (sin auditoria) y `PATCH /api/admin/medicos/:id/estado` (con auditoria). Ver escenario dedicado en la seccion 5.
 
+### Actualizacion (agosto 2026), sin bump de version
+
+Se agregaron escenarios de funcionalidad nueva sin reescribir el documento:
+historial clinico visible al medico (§4), notas privadas por cita (§4),
+descarga autenticada de documentos (§4), alerta de cita proxima en el
+dashboard (§7, reemplaza en la practica al recordatorio por email que nunca
+se disparaba), y un caso que faltaba en agendar cita: HOY debe poder
+agendarse igual que cualquier otro dia (§2) — un bug real lo impedia hasta
+ahora.
+
 ---
 
 ## 1. Modulo de Registro y Autenticacion
@@ -241,8 +251,19 @@ Caracteristica: Agendamiento de citas medicas
     Entonces recibo un codigo de estado 409
 
   Escenario: Agendar cita fallida por fecha en el pasado
-    Cuando intento agendar una cita con fecha anterior a hoy
+    Cuando intento agendar una cita con fecha estrictamente anterior a hoy
     Entonces recibo un codigo de estado 400
+
+  Escenario: Agendar cita para el mismo dia (hoy) cuando el medico tiene el horario libre
+    Dado que la fecha solicitada es la de HOY
+    Y el medico tiene ese horario disponible en su agenda
+    Cuando intento agendar
+    Entonces recibo un codigo de estado 201
+    Y la fecha de hoy NO se rechaza como "en el pasado" solo por serlo
+    # Bug real (agosto 2026): el validador comparaba la fecha elegida
+    # (medianoche UTC) contra el timestamp completo de "ahora", asi que
+    # HOY se rechazaba como pasado durante casi todo el dia. En la
+    # practica un paciente solo podia agendar desde manana, nunca hoy.
 ```
 
 ### Feature: Cancelar Cita
@@ -419,11 +440,49 @@ Caracteristica: Completar cita mediante ficha clinica
     Cuando consulto mi ficha clinica
     Entonces recibo un codigo de estado 200
     Y veo todas mis atenciones (diagnostico, indicaciones, receta, documentos)
+    # Hasta agosto 2026 el endpoint permitia esto pero la pantalla
+    # "Mi Ficha Clinica" nunca pedia los documentos (viven en un endpoint
+    # aparte, por ficha) ni sabia descargarlos con el token requerido -el
+    # paciente jamas veia los estudios que el medico subia. Corregido.
 
   Escenario: Paciente intenta ver la ficha clinica de otro paciente
     Cuando intento consultar la ficha clinica de otro paciente por su id
     Entonces recibo un codigo de estado 403
       (medico y administrador si pueden ver la ficha de cualquier paciente)
+
+  Escenario: Medico ve el historial clinico antes de completar una nueva ficha
+    Dado que estoy autenticado como medico y seleccione una cita para atender
+    Cuando se carga la pantalla de atencion
+    Entonces veo un panel con las atenciones previas del paciente
+      (fecha, medico, diagnostico, receta), de cualquier medico que lo haya
+      atendido antes
+    Y si no tiene atenciones previas, el panel indica "(0)" sin error
+
+  Escenario: Medico agrega una nota privada a una cita
+    Dado que estoy autenticado como medico, dueno de la cita
+    Cuando escribo una nota y la guardo
+    Entonces recibo un codigo de estado 200
+    Y la nota queda asociada a esa cita
+
+  Escenario: La nota privada del medico nunca llega al paciente ni a secretaria
+    Dado que una cita tiene una nota privada cargada
+    Cuando el paciente consulta sus propias citas, o la secretaria consulta
+      las citas de una fecha, o el paciente ve el detalle de esa cita
+    Entonces el campo de nota no aparece en la respuesta
+      (se omite explicitamente, no llega vacio: se elimina la clave)
+
+  Escenario: Un medico intenta escribir una nota en una cita ajena
+    Dado que la cita pertenece a otro medico
+    Cuando intento guardar una nota sobre esa cita
+    Entonces recibo un codigo de estado 403
+
+  Escenario: Descargar un documento adjunto requiere sesion (no es un link publico)
+    Dado que existe un documento adjunto a una ficha clinica
+    Cuando se solicita la descarga sin el token de autenticacion
+      (por ejemplo, un `<a href>` comun de navegador)
+    Entonces la descarga falla con 401
+    Y la app real la resuelve pidiendo el archivo por Axios con el token
+      y generando un link temporal en memoria para el navegador
 ```
 
 ### Feature: Marcar NO_SHOW
@@ -658,6 +717,39 @@ Caracteristica: Envio de notificaciones por email
 > scheduler ni tarea programada la invoca — es funcionalidad construida pero
 > nunca conectada a un disparador. Para que funcione de verdad haria falta
 > agregar una tarea periodica (ej. un cron job) que la llame.
+
+### Feature: Alerta de cita proxima en el dashboard (agosto 2026)
+
+En vez de un cron que mande emails, se agrego un aviso calculado del lado
+del cliente con los datos que la pantalla ya carga al entrar — sin
+infraestructura nueva ni efectos automaticos hacia afuera del sistema.
+
+```gherkin
+Caracteristica: Aviso de cita proxima sin depender de email
+  Como paciente o medico
+  Quiero ver un aviso si tengo una cita por empezar pronto
+  Para no depender de revisar mi email o acordarme solo
+
+  Escenario: Paciente ve el aviso si tiene una cita confirmada dentro de 24h
+    Dado que estoy autenticado como paciente
+    Y tengo una cita CONFIRMADA que empieza dentro de las proximas 24 horas
+    Cuando entro a mi dashboard
+    Entonces veo un banner "Recordatorio: tiene una cita hoy/manana a las
+      HH:MM con Dr. X"
+    Y si faltan menos de 2 horas, el texto dice "en N minutos" en vez de
+      "hoy"/"manana"
+
+  Escenario: Medico ve el aviso si tiene una cita confirmada dentro de 2h
+    Dado que estoy autenticado como medico
+    Y tengo una cita CONFIRMADA de hoy que empieza dentro de las proximas 2 horas
+    Cuando entro a mi dashboard
+    Entonces veo un banner "Proxima cita: {paciente} en N minutos"
+
+  Escenario: Sin citas dentro de la ventana, no aparece ningun banner
+    Dado que no tengo ninguna cita CONFIRMADA dentro de la ventana (24h/2h)
+    Cuando entro a mi dashboard
+    Entonces no se muestra ningun aviso
+```
 
 ---
 
