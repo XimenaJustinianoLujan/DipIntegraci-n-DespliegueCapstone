@@ -19,7 +19,7 @@ export default function DoctorsTable({ doctors, updatingId, onChangeStatus }) {
             </tr>
           ) : (
             doctors.map((doc) => {
-              const meta = statusMeta[doc.estado] || { label: doc.estado || 'Activo', bg: '#f1f5f9', color: '#475569' };
+              const meta = statusMeta[doc.estado] || { label: doc.estado || 'Activo', badgeClass: '' };
               return (
                 <tr key={doc.id}>
                   <td style={styles.td}>
@@ -32,7 +32,7 @@ export default function DoctorsTable({ doctors, updatingId, onChangeStatus }) {
                   </td>
                   <td style={styles.td}>{doc.especialidad || '—'}</td>
                   <td style={styles.td}>
-                    <span className="badge" style={{ backgroundColor: meta.bg, color: meta.color }}>
+                    <span className={`badge ${meta.badgeClass}`}>
                       {meta.label}
                     </span>
                   </td>

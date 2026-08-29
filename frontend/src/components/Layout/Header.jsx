@@ -84,7 +84,7 @@ export default function Header() {
                     <Link
                       key={link.to}
                       to={link.to}
-                      style={{ ...styles.link, ...(active ? styles.linkActive : {}) }}
+                      className={`header-nav-link${active ? ' active' : ''}`}
                     >
                       {link.label}
                     </Link>
@@ -141,8 +141,8 @@ export default function Header() {
               >
                 {isDark ? '☀️' : '🌙'}
               </button>
-              <Link to="/login" style={styles.link}>Iniciar Sesion</Link>
-              <Link to="/register" style={{ ...styles.link, ...styles.linkCta }}>
+              <Link to="/login" className="header-nav-link">Iniciar Sesion</Link>
+              <Link to="/register" className="header-nav-link cta">
                 Registrarse
               </Link>
             </div>
@@ -155,8 +155,8 @@ export default function Header() {
           <div style={styles.mobileUser}>
             <span style={styles.avatar}>{initials(user.nombre)}</span>
             <span style={styles.userMeta}>
-              <span style={{ ...styles.userName, color: 'var(--color-text)' }}>{user.nombre}</span>
-              <span style={{ ...styles.userRole, color: 'var(--color-text-muted)' }}>
+              <span style={styles.mobileUserName}>{user.nombre}</span>
+              <span style={styles.mobileUserRole}>
                 {roleLabels[user.role] || user.role}
               </span>
             </span>
@@ -167,7 +167,7 @@ export default function Header() {
               <Link
                 key={link.to}
                 to={link.to}
-                style={{ ...styles.mobileLink, ...(active ? styles.mobileLinkActive : {}) }}
+                className={`header-mobile-link${active ? ' active' : ''}`}
               >
                 <span>{link.icon}</span>
                 <span>{link.label}</span>
@@ -231,25 +231,10 @@ const styles = {
   brandThin: { fontWeight: 400, opacity: 0.85 },
   nav: { display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' },
   navLinks: { display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' },
-  link: {
-    color: 'rgba(255,255,255,0.88)',
-    textDecoration: 'none',
-    fontSize: '0.88rem',
-    fontWeight: 500,
-    padding: '0.45rem 0.75rem',
-    borderRadius: 'var(--radius-full)',
-    transition: 'background-color 0.15s ease, color 0.15s ease',
-  },
-  linkActive: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    color: '#fff',
-    fontWeight: 600,
-  },
-  linkCta: {
-    backgroundColor: '#fff',
-    color: '#2563eb',
-    fontWeight: 600,
-  },
+  // Los links de nav (activo + CTA de registro) viven como clases CSS
+  // (.header-nav-link / .active / .cta en index.css): son estado
+  // interactivo, no estilos que dependan de datos, asi que una clase
+  // real es mas simple que armar el objeto a mano en cada render.
   userBox: {
     display: 'flex',
     alignItems: 'center',
@@ -273,6 +258,11 @@ const styles = {
   userMeta: { display: 'flex', flexDirection: 'column', lineHeight: 1.15 },
   userName: { fontSize: '0.85rem', fontWeight: 600 },
   userRole: { fontSize: '0.72rem', opacity: 0.8 },
+  // Mismo texto que userName/userRole, pero sobre el panel movil (fondo
+  // claro/oscuro segun tema) en vez del header azul: necesitan su propio
+  // color, no son el mismo estilo con un solo campo distinto.
+  mobileUserName: { fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' },
+  mobileUserRole: { fontSize: '0.72rem', opacity: 0.8, color: 'var(--color-text-muted)' },
   logoutBtn: {
     marginLeft: '0.4rem',
     backgroundColor: 'rgba(255,255,255,0.14)',
@@ -292,22 +282,8 @@ const styles = {
     borderBottom: '1px solid var(--color-border)',
     marginBottom: '0.4rem',
   },
-  mobileLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.65rem',
-    padding: '0.7rem 0.75rem',
-    borderRadius: 'var(--radius-sm)',
-    color: 'var(--color-text-muted)',
-    textDecoration: 'none',
-    fontSize: '0.92rem',
-    fontWeight: 500,
-  },
-  mobileLinkActive: {
-    backgroundColor: 'var(--color-primary-50)',
-    color: 'var(--color-primary-dark)',
-    fontWeight: 700,
-  },
+  // .header-mobile-link / .active en index.css (mismo criterio que los
+  // links del nav de escritorio).
   cmdkBtn: {
     display: 'inline-flex',
     alignItems: 'center',

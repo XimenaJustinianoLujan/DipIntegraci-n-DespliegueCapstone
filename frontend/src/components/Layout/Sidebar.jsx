@@ -49,9 +49,9 @@ export default function Sidebar() {
             <Link
               key={link.to}
               to={link.to}
-              style={{ ...styles.link, ...(active ? styles.activeLink : {}) }}
+              className={`sidebar-link${active ? ' active' : ''}`}
             >
-              <span style={{ ...styles.iconTile, ...(active ? styles.iconTileActive : {}) }}>
+              <span className="sidebar-icon-tile">
                 {link.icon}
               </span>
               <span>{link.label}</span>
@@ -85,35 +85,7 @@ const styles = {
     marginBottom: '0.6rem',
   },
   nav: { display: 'flex', flexDirection: 'column', gap: '0.15rem' },
-  link: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.7rem',
-    padding: '0.55rem 0.75rem',
-    textDecoration: 'none',
-    color: 'var(--color-text-muted)',
-    fontSize: '0.9rem',
-    fontWeight: 500,
-    borderRadius: 'var(--radius-sm)',
-    transition: 'background-color 0.15s ease, color 0.15s ease',
-  },
-  activeLink: {
-    backgroundColor: 'var(--color-primary-50)',
-    color: 'var(--color-primary-dark)',
-    fontWeight: 600,
-  },
-  iconTile: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '30px',
-    height: '30px',
-    borderRadius: '8px',
-    backgroundColor: 'var(--color-surface-2)',
-    fontSize: '0.95rem',
-    flexShrink: 0,
-  },
-  iconTileActive: {
-    backgroundColor: 'var(--color-primary-light)',
-  },
+  // El link (activo o no) y el icono viven como clases CSS
+  // (.sidebar-link / .active / .sidebar-icon-tile en index.css): es
+  // puro estado de navegacion, no un valor que dependa de datos.
 };

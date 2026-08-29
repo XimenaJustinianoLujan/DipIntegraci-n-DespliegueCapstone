@@ -233,7 +233,12 @@ button:focus-visible {
   border-color: #cdd7e5;
 }
 
-/* Barra de estado (chips de estado de cita) — clases utilitarias */
+/* Barra de estado (chips de estado de cita) — clases utilitarias.
+   El mapa de colores por estado vivia copiado e identico en 4 archivos
+   (secretary/Dashboard, doctor/Dashboard, patient/Dashboard,
+   patient/MyAppointments) como un objeto JS local + style inline; ahora
+   es una unica fuente de verdad aca. El color por defecto (gris) cubre
+   cualquier estado que no matchee ninguna clase especifica. */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -243,7 +248,15 @@ button:focus-visible {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  background-color: #f1f5f9;
+  color: #475569;
 }
+.badge-confirmada { background-color: #dbeafe; color: #1d4ed8; }
+.badge-completada { background-color: #dcfce7; color: #16a34a; }
+.badge-cancelada { background-color: #fee2e2; color: #dc2626; }
+.badge-no-show { background-color: #fef3c7; color: #d97706; }
+.badge-reconsulta { background-color: #e0e7ff; color: #4f46e5; }
+.badge-activa { background-color: #dcfce7; color: #16a34a; }
 
 /* ---- Transicion de entrada de cada vista ---- */
 @keyframes fadeInUp {
@@ -356,6 +369,204 @@ main > * {
 .skip-link:focus {
   top: 0.75rem;
 }
+
+/* ---- Estados interactivos (link activo, tab activo, celda/tarjeta
+   seleccionada, paso deshabilitado) ----
+   Antes vivian como merges de objetos JS en cada componente
+   (`{...styles.x, ...(activo ? styles.xActivo : {})}`), recalculando un
+   objeto nuevo en cada render para un valor que en realidad es estado de
+   UI, no un dato. Se movieron aca como clases reales + className
+   condicional. Los colores que SI dependen de datos (badges de estado de
+   cita, puntos de graficos) siguen con style inline: no hay forma de
+   volverlos clase estatica sin generar una por cada combinacion posible. */
+
+.header-nav-link {
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-full);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.header-nav-link.active {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 600;
+}
+.header-nav-link.cta {
+  background-color: #fff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.header-mobile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+.header-mobile-link.active {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-link.active {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+.sidebar-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: var(--color-surface-2);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.sidebar-link.active .sidebar-icon-tile {
+  background-color: var(--color-primary-light);
+}
+
+.cmdpalette-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+.cmdpalette-item[aria-selected='true'] {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-dark);
+}
+
+.appointment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+.appointment-card.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-50);
+}
+
+.schedule-cell {
+  padding: 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  transition: background-color 0.12s;
+  min-width: 64px;
+  color: #fff;
+  font-weight: 700;
+}
+.schedule-cell.selected {
+  background-color: var(--color-primary);
+}
+.schedule-legend-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.schedule-legend-box.available { background-color: var(--color-primary); }
+.schedule-legend-box.unavailable {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.schedule-legend-box.outside { background-color: #eef2f7; }
+
+.myapp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.myapp-tab.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.myapp-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.myapp-tab.active .myapp-tab-count {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.slot-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.slot-btn.active {
+  background-color: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.wizard-step { margin-bottom: 1.5rem; }
+.wizard-step.disabled { opacity: 0.55; }
+
+.empty-state-icon { color: var(--color-primary); }
 
 /* ---- Navegacion responsive ---- */
 .mobile-menu-btn { display: none; }

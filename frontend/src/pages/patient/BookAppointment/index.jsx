@@ -91,7 +91,7 @@ export default function BookAppointment() {
                   <button
                     key={value}
                     type="button"
-                    style={{ ...styles.slotBtn, ...(active ? styles.slotBtnActive : {}) }}
+                    className={`slot-btn${active ? ' active' : ''}`}
                     onClick={() => setSelectedSlot(value)}
                   >
                     {value}
@@ -158,21 +158,8 @@ const styles = {
     backgroundColor: 'var(--color-surface)',
   },
   slotsGrid: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem' },
-  slotBtn: {
-    padding: '0.5rem 1rem',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-sm)',
-    backgroundColor: 'var(--color-surface)',
-    cursor: 'pointer',
-    fontSize: '0.88rem',
-    fontWeight: 600,
-    color: 'var(--color-text)',
-  },
-  slotBtnActive: {
-    backgroundColor: 'var(--color-primary)',
-    color: '#fff',
-    borderColor: 'var(--color-primary)',
-  },
+  // .slot-btn / .active en index.css: horario seleccionado, no un valor
+  // que dependa de datos.
   noSlots: { color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 },
   summary: {
     display: 'flex',

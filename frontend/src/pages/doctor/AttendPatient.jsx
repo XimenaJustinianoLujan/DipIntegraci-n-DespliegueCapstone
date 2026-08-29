@@ -102,7 +102,7 @@ export default function AttendPatient() {
               return (
                 <div
                   key={cita.id}
-                  style={{ ...styles.appointmentCard, ...(active ? styles.selectedCard : {}) }}
+                  className={`appointment-card${active ? ' selected' : ''}`}
                   onClick={() => setSelectedAppointment(cita)}
                 >
                   <div>
@@ -225,19 +225,8 @@ const styles = {
     textAlign: 'center',
   },
   emptyIcon: { fontSize: '1.9rem' },
-  appointmentCard: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '0.5rem',
-    padding: '0.85rem',
-    marginBottom: '0.5rem',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-sm)',
-    cursor: 'pointer',
-    transition: 'border-color 0.12s, background-color 0.12s',
-  },
-  selectedCard: { borderColor: 'var(--color-primary)', backgroundColor: 'var(--color-primary-50)' },
+  // .appointment-card / .selected en index.css: seleccion de tarjeta,
+  // no un valor que dependa de datos.
   patientName: { display: 'block', fontSize: '0.9rem', color: 'var(--color-text)' },
   apptTime: { fontSize: '0.78rem', color: 'var(--color-text-muted)' },
   noShowBtn: {

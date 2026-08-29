@@ -165,7 +165,7 @@ export default function CommandPalette() {
                 aria-selected={idx === activeIdx}
                 onMouseEnter={() => setActiveIdx(idx)}
                 onClick={() => runCommand(cmd)}
-                style={{ ...styles.item, ...(idx === activeIdx ? styles.itemActive : {}) }}
+                className="cmdpalette-item"
               >
                 <span style={styles.itemIcon}>{cmd.icon}</span>
                 <span>{cmd.label}</span>
@@ -233,21 +233,10 @@ const styles = {
   },
   list: { maxHeight: '340px', overflowY: 'auto', padding: '0.5rem' },
   empty: { padding: '1.5rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.88rem' },
-  item: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    width: '100%',
-    padding: '0.65rem 0.75rem',
-    border: 'none',
-    background: 'transparent',
-    borderRadius: 'var(--radius-sm)',
-    fontSize: '0.92rem',
-    color: 'var(--color-text)',
-    textAlign: 'left',
-    cursor: 'pointer',
-  },
-  itemActive: { backgroundColor: 'var(--color-primary-50)', color: 'var(--color-primary-dark)' },
+  // .cmdpalette-item (+ [aria-selected="true"], que el boton ya trae) en
+  // index.css: la seleccion por teclado/mouse ya se refleja en el propio
+  // atributo aria-selected, asi que estilarla ahi evita duplicar el
+  // estado en una clase aparte.
   itemIcon: { fontSize: '1.05rem', width: '1.4rem', textAlign: 'center', flexShrink: 0 },
   footer: {
     display: 'flex',

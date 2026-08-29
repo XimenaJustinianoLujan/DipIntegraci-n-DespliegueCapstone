@@ -74,7 +74,7 @@ export default function WeeklyTrendChart({ data, title }) {
                 fill="var(--color-surface)"
                 stroke="var(--color-primary)"
                 strokeWidth="2"
-                style={{ transition: 'r 0.1s ease', pointerEvents: 'none' }}
+                style={styles.hoverDot}
               />
               <text x={p.x} y={HEIGHT - 8} textAnchor="middle" style={styles.axisLabel}>
                 {dayLabel(p.fecha)}
@@ -105,6 +105,7 @@ const styles = {
   title: { margin: 0, fontSize: '0.95rem', color: 'var(--color-text)' },
   svgWrap: { position: 'relative', width: '100%' },
   svg: { width: '100%', height: 'auto', display: 'block', overflow: 'visible' },
+  hoverDot: { transition: 'r 0.1s ease', pointerEvents: 'none' },
   axisLabel: {
     fontSize: '9px',
     fill: 'var(--color-text-subtle)',

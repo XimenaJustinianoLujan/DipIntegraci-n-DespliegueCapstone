@@ -3,14 +3,7 @@ import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
 import { EmptyFolder } from '../../components/illustrations/EmptyState';
-
-const statusColors = {
-  CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
-  COMPLETADA: { bg: '#dcfce7', color: '#16a34a' },
-  CANCELADA: { bg: '#fee2e2', color: '#dc2626' },
-  NO_SHOW: { bg: '#fef3c7', color: '#d97706' },
-  RECONSULTA: { bg: '#e0e7ff', color: '#4f46e5' },
-};
+import { citaStatusClass } from '../../utils/citaStatus';
 
 const filters = [
   { key: 'TODAS', label: 'Todas' },
@@ -81,10 +74,10 @@ export default function MyAppointments() {
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              style={{ ...styles.tab, ...(active ? styles.tabActive : {}) }}
+              className={`myapp-tab${active ? ' active' : ''}`}
             >
               {f.label}
-              <span style={{ ...styles.tabCount, ...(active ? styles.tabCountActive : {}) }}>
+              <span className="myapp-tab-count">
                 {counts[f.key] || 0}
               </span>
             </button>
@@ -110,7 +103,6 @@ export default function MyAppointments() {
       ) : (
         <div style={styles.list}>
           {visible.map((cita) => {
-            const c = statusColors[cita.estado] || { bg: '#f1f5f9', color: '#475569' };
             return (
               <div key={cita.id} style={styles.card}>
                 <div style={styles.cardLeft}>
@@ -133,7 +125,7 @@ export default function MyAppointments() {
                   </div>
                 </div>
                 <div style={styles.cardRight}>
-                  <span className="badge" style={{ backgroundColor: c.bg, color: c.color }}>
+                  <span className={citaStatusClass(cita.estado)}>
                     {cita.estado}
                   </span>
                   {cita.estado === 'CONFIRMADA' && (
@@ -159,38 +151,8 @@ const styles = {
   title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
   subtitle: { margin: '0 0 1.5rem', color: 'var(--color-text-muted)' },
   tabs: { display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-  tab: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.45rem',
-    padding: '0.5rem 0.9rem',
-    backgroundColor: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-full)',
-    color: 'var(--color-text-muted)',
-    fontSize: '0.85rem',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  tabActive: {
-    backgroundColor: 'var(--color-primary)',
-    borderColor: 'var(--color-primary)',
-    color: '#fff',
-  },
-  tabCount: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: '20px',
-    height: '20px',
-    padding: '0 0.35rem',
-    borderRadius: 'var(--radius-full)',
-    backgroundColor: 'var(--color-surface-2)',
-    color: 'var(--color-text-muted)',
-    fontSize: '0.72rem',
-    fontWeight: 700,
-  },
-  tabCountActive: { backgroundColor: 'rgba(255,255,255,0.25)', color: '#fff' },
+  // .myapp-tab / .active y .myapp-tab-count en index.css: filtro activo,
+  // no un valor que dependa de datos.
   chartCard: {
     padding: '1.35rem 1.5rem',
     marginBottom: '1.5rem',

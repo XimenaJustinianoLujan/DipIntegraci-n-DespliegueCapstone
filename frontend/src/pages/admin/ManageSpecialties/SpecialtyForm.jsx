@@ -21,7 +21,7 @@ export default function SpecialtyForm({ form, formError, saving, onChangeField, 
             required
           />
         </div>
-        <div style={{ ...styles.field, flex: '2 1 260px' }}>
+        <div style={styles.fieldWide}>
           <label style={styles.label} htmlFor="new-esp-desc">Descripcion</label>
           <input
             id="new-esp-desc"
@@ -63,6 +63,8 @@ const styles = {
   formTitle: { margin: '0 0 1rem', color: 'var(--color-text)', fontSize: '1.05rem' },
   row: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
   field: { marginBottom: '1.1rem', flex: '1 1 180px' },
+  // Mismo campo, mas ancho (para la descripcion, que necesita mas lugar).
+  fieldWide: { marginBottom: '1.1rem', flex: '2 1 260px' },
   label: {
     display: 'block',
     marginBottom: '0.3rem',

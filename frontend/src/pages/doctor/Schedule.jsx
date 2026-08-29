@@ -146,7 +146,7 @@ export default function Schedule() {
                       return (
                         <td
                           key={diaSemana}
-                          style={{ ...styles.cell, ...(isSelected ? styles.selectedCell : {}) }}
+                          className={`schedule-cell${isSelected ? ' selected' : ''}`}
                           onClick={() => toggleSlot(diaSemana, hour)}
                           title={isSelected ? 'Disponible (clic para quitar)' : 'Clic para marcar disponible'}
                         >
@@ -162,13 +162,13 @@ export default function Schedule() {
 
           <div style={styles.legend}>
             <span style={styles.legendItem}>
-              <span style={{ ...styles.legendBox, backgroundColor: 'var(--color-primary)' }} /> Disponible
+              <span className="schedule-legend-box available" /> Disponible
             </span>
             <span style={styles.legendItem}>
-              <span style={{ ...styles.legendBox, backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }} /> No disponible
+              <span className="schedule-legend-box unavailable" /> No disponible
             </span>
             <span style={styles.legendItem}>
-              <span style={{ ...styles.legendBox, backgroundColor: '#eef2f7' }} /> Fuera de horario
+              <span className="schedule-legend-box outside" /> Fuera de horario
             </span>
           </div>
 
@@ -254,17 +254,8 @@ const styles = {
     textAlign: 'center',
     backgroundColor: 'var(--color-surface-2)',
   },
-  cell: {
-    padding: '0.5rem',
-    textAlign: 'center',
-    cursor: 'pointer',
-    border: '1px solid var(--color-border)',
-    transition: 'background-color 0.12s',
-    minWidth: '64px',
-    color: '#fff',
-    fontWeight: 700,
-  },
-  selectedCell: { backgroundColor: 'var(--color-primary)' },
+  // .schedule-cell / .selected en index.css: color de la celda segun
+  // disponibilidad, es estado, no dato.
   disabledCell: {
     padding: '0.5rem',
     textAlign: 'center',
@@ -274,7 +265,7 @@ const styles = {
   },
   legend: { display: 'flex', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
   legendItem: { display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' },
-  legendBox: { width: '16px', height: '16px', borderRadius: '4px', display: 'inline-block' },
+  // .schedule-legend-box (+ .available/.unavailable/.outside) en index.css.
   saveBtn: {
     padding: '0.75rem 2rem',
     backgroundColor: 'var(--color-primary)',
