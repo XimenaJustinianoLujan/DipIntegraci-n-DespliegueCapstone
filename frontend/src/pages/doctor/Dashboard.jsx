@@ -3,14 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
-
-const statusColors = {
-  CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
-  COMPLETADA: { bg: '#dcfce7', color: '#16a34a' },
-  CANCELADA: { bg: '#fee2e2', color: '#dc2626' },
-  NO_SHOW: { bg: '#fef3c7', color: '#d97706' },
-  RECONSULTA: { bg: '#e0e7ff', color: '#4f46e5' },
-};
+import { citaStatusClass } from '../../utils/citaStatus';
 
 const rawToday = new Date().toLocaleDateString('es-ES', {
   weekday: 'long',
@@ -60,7 +53,7 @@ export default function DoctorDashboard() {
           <span style={styles.statLabel}>Citas hoy</span>
         </div>
         <div style={styles.statCard}>
-          <span style={{ ...styles.statValue, color: 'var(--color-primary)' }}>{confirmadas}</span>
+          <span style={styles.statValueAccent}>{confirmadas}</span>
           <span style={styles.statLabel}>Por atender</span>
         </div>
         <Link to="/medico/agenda" className="lift" style={styles.actionCard}>
@@ -94,14 +87,13 @@ export default function DoctorDashboard() {
       ) : (
         <div style={styles.list}>
           {todayAppointments.map((cita) => {
-            const c = statusColors[cita.estado] || { bg: '#f1f5f9', color: '#475569' };
             return (
               <div key={cita.id} style={styles.card}>
                 <div style={styles.cardLeft}>
                   <span style={styles.timePill}>{cita.hora_inicio}</span>
                   <strong style={styles.patient}>{cita.paciente_nombre || 'Paciente'}</strong>
                 </div>
-                <span className="badge" style={{ backgroundColor: c.bg, color: c.color }}>
+                <span className={citaStatusClass(cita.estado)}>
                   {cita.estado}
                 </span>
               </div>
@@ -134,6 +126,8 @@ const styles = {
     boxShadow: 'var(--shadow-sm)',
   },
   statValue: { fontSize: '2rem', fontWeight: 800, color: 'var(--color-text)', lineHeight: 1 },
+  // Mismo numero, resaltado con el color de marca (para "por atender").
+  statValueAccent: { fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)', lineHeight: 1 },
   statLabel: { fontSize: '0.82rem', color: 'var(--color-text-muted)', marginTop: '0.35rem' },
   actionCard: {
     display: 'flex',

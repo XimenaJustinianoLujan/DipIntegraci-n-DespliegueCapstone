@@ -104,7 +104,7 @@ export default function Login() {
                 <input
                   id="login-password"
                   type={showPass ? 'text' : 'password'}
-                  style={{ ...styles.input, paddingRight: '2.9rem' }}
+                  style={styles.inputWithToggle}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   {...register('password', {
@@ -194,6 +194,16 @@ const styles = {
   input: {
     width: '100%',
     padding: '0.7rem 0.85rem',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.92rem',
+    boxSizing: 'border-box',
+  },
+  // Mismo input, con lugar para el icono de mostrar/ocultar contrasena.
+  inputWithToggle: {
+    width: '100%',
+    padding: '0.7rem 0.85rem',
+    paddingRight: '2.9rem',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-sm)',
     fontSize: '0.92rem',

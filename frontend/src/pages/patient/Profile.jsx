@@ -105,7 +105,7 @@ export default function Profile() {
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.field}>
           <label style={styles.label} htmlFor="profile-email">Email</label>
-          <input id="profile-email" type="email" style={{ ...styles.input, ...styles.readonly }} value={email} disabled />
+          <input id="profile-email" type="email" style={styles.inputReadonly} value={email} disabled />
           <span style={styles.hint}>El email no se puede modificar.</span>
         </div>
 
@@ -217,7 +217,17 @@ const styles = {
     fontSize: '0.9rem',
     boxSizing: 'border-box',
   },
-  readonly: { backgroundColor: 'var(--color-surface-2)', color: 'var(--color-text-muted)' },
+  // Mismo input, pero deshabilitado (el email no se puede editar).
+  inputReadonly: {
+    width: '100%',
+    padding: '0.6rem 0.75rem',
+    border: '1px solid var(--color-border)',
+    borderRadius: '4px',
+    fontSize: '0.9rem',
+    boxSizing: 'border-box',
+    backgroundColor: 'var(--color-surface-2)',
+    color: 'var(--color-text-muted)',
+  },
   hint: { fontSize: '0.75rem', color: 'var(--color-text-subtle)', marginTop: '0.25rem', display: 'block' },
   submitBtn: {
     width: '100%',

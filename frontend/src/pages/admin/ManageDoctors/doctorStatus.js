@@ -1,9 +1,11 @@
 // El backend usa el enum en MAYUSCULAS (ACTIVO/BAJA/VACACION); mostramos una
-// etiqueta capitalizada pero enviamos el valor que la API valida.
+// etiqueta capitalizada pero enviamos el valor que la API valida. Los
+// colores viven en index.css (mismas clases que otros badges de la app:
+// verde/rojo/ambar tienen el mismo significado en todos lados).
 export const statusMeta = {
-  ACTIVO: { label: 'Activo', bg: '#dcfce7', color: '#16a34a' },
-  BAJA: { label: 'Baja', bg: '#fee2e2', color: '#dc2626' },
-  VACACION: { label: 'Vacacion', bg: '#fef3c7', color: '#d97706' },
+  ACTIVO: { label: 'Activo', badgeClass: 'badge-activa' },
+  BAJA: { label: 'Baja', badgeClass: 'badge-cancelada' },
+  VACACION: { label: 'Vacacion', badgeClass: 'badge-no-show' },
 };
 
 export const statusOptions = ['ACTIVO', 'BAJA', 'VACACION'];

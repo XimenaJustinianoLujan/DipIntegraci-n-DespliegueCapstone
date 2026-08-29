@@ -3,14 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import { EmptyCalendar } from '../../components/illustrations/EmptyState';
-
-const statusColors = {
-  CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
-  COMPLETADA: { bg: '#dcfce7', color: '#16a34a' },
-  CANCELADA: { bg: '#fee2e2', color: '#dc2626' },
-  NO_SHOW: { bg: '#fef3c7', color: '#d97706' },
-  RECONSULTA: { bg: '#e0e7ff', color: '#4f46e5' },
-};
+import { citaStatusClass } from '../../utils/citaStatus';
 
 const actions = [
   { to: '/paciente/agendar', icon: '📅', label: 'Agendar Cita', desc: 'Reserve un nuevo turno' },
@@ -82,7 +75,6 @@ export default function PatientDashboard() {
       ) : (
         <div style={styles.list}>
           {appointments.map((cita) => {
-            const c = statusColors[cita.estado] || { bg: '#f1f5f9', color: '#475569' };
             return (
               <div key={cita.id} style={styles.card}>
                 <div style={styles.cardLeft}>
@@ -104,7 +96,7 @@ export default function PatientDashboard() {
                     </p>
                   </div>
                 </div>
-                <span className="badge" style={{ backgroundColor: c.bg, color: c.color }}>
+                <span className={citaStatusClass(cita.estado)}>
                   {cita.estado}
                 </span>
               </div>

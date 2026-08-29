@@ -10,7 +10,7 @@ function Base({ children, size = 96 }) {
       viewBox="0 0 96 96"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ color: 'var(--color-primary)' }}
+      className="empty-state-icon"
       aria-hidden="true"
     >
       {children}

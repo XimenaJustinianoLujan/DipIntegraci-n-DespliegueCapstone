@@ -3,14 +3,7 @@ import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
 import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
-
-const statusColors = {
-  CONFIRMADA: { bg: '#dbeafe', color: '#1d4ed8' },
-  COMPLETADA: { bg: '#dcfce7', color: '#16a34a' },
-  CANCELADA: { bg: '#fee2e2', color: '#dc2626' },
-  NO_SHOW: { bg: '#fef3c7', color: '#d97706' },
-  RECONSULTA: { bg: '#e0e7ff', color: '#4f46e5' },
-};
+import { citaStatusClass } from '../../utils/citaStatus';
 
 export default function SecretaryDashboard() {
   const { user } = useAuth();
@@ -114,14 +107,13 @@ export default function SecretaryDashboard() {
                 </tr>
               ) : (
                 appointments.map((cita) => {
-                  const c = statusColors[cita.estado] || { bg: '#f1f5f9', color: '#475569' };
                   return (
                     <tr key={cita.id}>
                       <td style={styles.td}><strong>{cita.hora_inicio}</strong></td>
                       <td style={styles.td}>{cita.paciente_nombre || 'Paciente'}</td>
                       <td style={styles.td}>{cita.medico_nombre || 'Medico'}</td>
                       <td style={styles.td}>
-                        <span className="badge" style={{ backgroundColor: c.bg, color: c.color }}>
+                        <span className={citaStatusClass(cita.estado)}>
                           {cita.estado}
                         </span>
                       </td>

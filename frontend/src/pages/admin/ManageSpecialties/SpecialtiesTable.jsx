@@ -54,13 +54,7 @@ export default function SpecialtiesTable({
                     )}
                   </td>
                   <td style={styles.td}>
-                    <span
-                      className="badge"
-                      style={{
-                        backgroundColor: esp.activo ? '#dcfce7' : '#f1f5f9',
-                        color: esp.activo ? '#16a34a' : '#64748b',
-                      }}
-                    >
+                    <span className={`badge${esp.activo ? ' badge-activa' : ''}`}>
                       {esp.activo ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
