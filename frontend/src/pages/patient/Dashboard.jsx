@@ -61,7 +61,13 @@ export default function PatientDashboard() {
             <strong>Recordatorio:</strong> tiene una cita{' '}
             {hoursUntilCita(upcoming.cita) < 2
               ? `en ${Math.max(0, Math.round(hoursUntilCita(upcoming.cita) * 60))} minutos`
-              : dayjs(upcoming.cita.fecha).isSame(dayjs(), 'day')
+              // Comparar el string de fecha directo (en vez de
+              // dayjs(fecha).isSame(dayjs(), 'day')) evita que una fecha
+              // 'YYYY-MM-DD' -que dayjs interpreta como medianoche UTC-
+              // se lea como "ayer" o "manana" segun la zona horaria local
+              // del navegador (mismo tipo de bug que ya aparecio con
+              // getDay() en turnos-domingo).
+              : String(upcoming.cita.fecha).slice(0, 10) === dayjs().format('YYYY-MM-DD')
                 ? 'hoy'
                 : 'manana'}
             {' a las '}{upcoming.cita.hora_inicio?.slice(0, 5)}
