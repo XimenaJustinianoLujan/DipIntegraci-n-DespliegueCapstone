@@ -117,7 +117,7 @@ export default function MyAppointments() {
                     </span>
                   </span>
                   <div>
-                    <strong style={styles.doctor}>{cita.medico_nombre || 'Medico'}</strong>
+                    <strong style={styles.doctor}>{cita.medico_nombre ? `Dr. ${cita.medico_nombre}` : 'Medico'}</strong>
                     <p style={styles.meta}>
                       🕐 {cita.hora_inicio}
                       {cita.especialidad ? ` · ${cita.especialidad}` : ''}

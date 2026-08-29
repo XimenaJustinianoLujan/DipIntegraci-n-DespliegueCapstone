@@ -10,6 +10,11 @@ export default function AttendPatient() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [notas, setNotas] = useState('');
+  const [savingNotas, setSavingNotas] = useState(false);
+  const [notasMessage, setNotasMessage] = useState('');
 
   const {
     register,
@@ -21,6 +26,51 @@ export default function AttendPatient() {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  // Historial clinico del paciente seleccionado -para que el medico no
+  // atienda a ciegas: diagnosticos, indicaciones y recetas de consultas
+  // anteriores, sin importar con que medico haya sido. El endpoint ya
+  // permite a cualquier medico ver el historial de cualquier paciente
+  // (GET /fichas-clinicas/:pacienteId), solo faltaba conectarlo aca.
+  useEffect(() => {
+    if (!selectedAppointment?.paciente_id) {
+      setHistory([]);
+      return;
+    }
+    const fetchHistory = async () => {
+      setHistoryLoading(true);
+      try {
+        const response = await api.get(`/fichas-clinicas/${selectedAppointment.paciente_id}`);
+        setHistory(response.data || []);
+      } catch (err) {
+        setHistory([]);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [selectedAppointment?.paciente_id]);
+
+  // La nota ya viene en la propia cita (GET /citas/medico trae `notas`
+  // para el medico tratante), no hace falta un fetch aparte.
+  useEffect(() => {
+    setNotas(selectedAppointment?.notas || '');
+    setNotasMessage('');
+  }, [selectedAppointment?.id]);
+
+  const saveNotas = async () => {
+    if (!selectedAppointment) return;
+    setSavingNotas(true);
+    setNotasMessage('');
+    try {
+      await api.patch(`/citas/${selectedAppointment.id}/notas`, { notas });
+      setNotasMessage('Nota guardada');
+    } catch (err) {
+      setNotasMessage('Error al guardar la nota');
+    } finally {
+      setSavingNotas(false);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -131,6 +181,49 @@ export default function AttendPatient() {
                   Atendiendo a <strong>{selectedAppointment.paciente_nombre || 'Paciente'}</strong>
                   {' · '}{selectedAppointment.hora_inicio}
                 </span>
+              </div>
+
+              <details style={styles.historyBox} open={history.length > 0}>
+                <summary style={styles.historySummary}>
+                  📖 Historial clinico del paciente
+                  {historyLoading ? ' (cargando...)' : ` (${history.length})`}
+                </summary>
+                {!historyLoading && history.length === 0 && (
+                  <p style={styles.historyEmpty}>Sin atenciones previas registradas.</p>
+                )}
+                <div style={styles.historyList}>
+                  {history.map((h) => (
+                    <div key={h.id} style={styles.historyItem}>
+                      <div style={styles.historyItemHead}>
+                        <strong>{dayjs(h.fecha).format('DD/MM/YYYY')}</strong>
+                        <span style={styles.historyItemDoctor}>Dr. {h.medico_nombre}{h.especialidad ? ` · ${h.especialidad}` : ''}</span>
+                      </div>
+                      {h.diagnostico && <p style={styles.historyItemText}><strong>Dx:</strong> {h.diagnostico}</p>}
+                      {h.receta && <p style={styles.historyItemText}><strong>Receta:</strong> {h.receta}</p>}
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <div style={styles.notasBox}>
+                <label style={styles.label} htmlFor="attend-notas">
+                  🔒 Nota privada (solo visible para medicos y administracion)
+                </label>
+                <textarea
+                  id="attend-notas"
+                  style={styles.textarea}
+                  rows="2"
+                  placeholder="Ej: alergico a la penicilina, antecedente relevante..."
+                  value={notas}
+                  onChange={(e) => setNotas(e.target.value)}
+                  maxLength={1000}
+                />
+                <div style={styles.notasFooter}>
+                  {notasMessage && <span style={styles.notasMessage}>{notasMessage}</span>}
+                  <button type="button" style={styles.notasSaveBtn} onClick={saveNotas} disabled={savingNotas}>
+                    {savingNotas ? 'Guardando...' : 'Guardar nota'}
+                  </button>
+                </div>
               </div>
 
               <div style={styles.field}>
@@ -261,6 +354,70 @@ const styles = {
     color: 'var(--color-text)',
   },
   bannerIcon: { fontSize: '1.2rem' },
+  historyBox: {
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '0.75rem 1rem',
+    marginBottom: '1.25rem',
+    backgroundColor: 'var(--color-surface-2)',
+  },
+  historySummary: {
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: '0.88rem',
+    color: 'var(--color-text)',
+  },
+  historyEmpty: { margin: '0.6rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' },
+  historyList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem',
+    marginTop: '0.75rem',
+    maxHeight: '220px',
+    overflowY: 'auto',
+  },
+  historyItem: {
+    padding: '0.6rem 0.75rem',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-sm)',
+  },
+  historyItemHead: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.4rem',
+    fontSize: '0.82rem',
+    color: 'var(--color-text)',
+    marginBottom: '0.3rem',
+  },
+  historyItemDoctor: { color: 'var(--color-text-muted)', fontWeight: 500 },
+  historyItemText: { margin: '0.15rem 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.4 },
+  notasBox: {
+    padding: '0.75rem 1rem',
+    marginBottom: '1.25rem',
+    backgroundColor: 'var(--color-warning-bg)',
+    border: '1px dashed #fde68a',
+    borderRadius: 'var(--radius-sm)',
+  },
+  notasFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '0.75rem',
+    marginTop: '0.5rem',
+  },
+  notasMessage: { fontSize: '0.8rem', color: 'var(--color-text-muted)' },
+  notasSaveBtn: {
+    padding: '0.4rem 0.9rem',
+    backgroundColor: 'var(--color-warning)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.82rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
   field: { marginBottom: '1rem' },
   label: { display: 'block', marginBottom: '0.35rem', color: 'var(--color-text)', fontSize: '0.88rem', fontWeight: 600 },
   textarea: {

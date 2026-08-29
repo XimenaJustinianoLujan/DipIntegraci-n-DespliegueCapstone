@@ -4,8 +4,9 @@ const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 const AppointmentService = require('../services/appointmentService');
 const Cita = require('../models/Cita');
-const { createCitaValidator, cancelCitaValidator, citaIdValidator } = require('../validators/cita.validator');
+const { createCitaValidator, cancelCitaValidator, citaIdValidator, notasCitaValidator } = require('../validators/cita.validator');
 const validate = require('../middleware/validate');
+const { omitNotas } = require('../utils/sanitizeCita');
 
 // POST /api/citas - Create appointment
 router.post('/', auth, authorize('paciente'), createCitaValidator, validate, async (req, res, next) => {
@@ -54,7 +55,11 @@ router.get('/:id', auth, citaIdValidator, validate, async (req, res, next) => {
       });
     }
 
-    res.json(cita);
+    // Las notas del medico son privadas: solo las ve el propio medico
+    // tratante o un administrador.
+    const canSeeNotas = req.user.role === 'administrador' ||
+      (req.user.role === 'medico' && cita.medico_id === req.user.id);
+    res.json(canSeeNotas ? cita : omitNotas(cita));
   } catch (error) {
     next(error);
   }
@@ -70,7 +75,7 @@ router.patch('/:id/cancelar', auth, authorize('paciente'), cancelCitaValidator, 
 
     res.json({
       message: 'Cita cancelada exitosamente',
-      cita,
+      cita: omitNotas(cita),
     });
   } catch (error) {
     next(error);
@@ -123,6 +128,36 @@ router.patch('/:id/no-show', auth, authorize('medico', 'secretaria'), citaIdVali
     res.json({
       message: 'Cita marcada como NO_SHOW',
       cita,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/citas/:id/notas - Nota privada del medico sobre la cita
+// (nunca visible para el paciente ni la secretaria, ver sanitizeCita.js).
+router.patch('/:id/notas', auth, authorize('medico', 'administrador'), notasCitaValidator, validate, async (req, res, next) => {
+  try {
+    const cita = await Cita.findById(req.params.id);
+    if (!cita) {
+      return res.status(404).json({
+        error: 'No encontrado',
+        message: 'Cita no encontrada',
+      });
+    }
+
+    if (req.user.role === 'medico' && cita.medico_id !== req.user.id) {
+      return res.status(403).json({
+        error: 'Sin permisos',
+        message: 'Solo puede agregar notas a sus propias citas',
+      });
+    }
+
+    const updated = await Cita.updateNotas(req.params.id, req.body.notas);
+
+    res.json({
+      message: 'Notas guardadas',
+      cita: updated,
     });
   } catch (error) {
     next(error);
