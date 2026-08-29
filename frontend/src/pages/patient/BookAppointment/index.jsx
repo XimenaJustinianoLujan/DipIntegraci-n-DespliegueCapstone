@@ -1,121 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../config/api';
 import dayjs from 'dayjs';
-import { SuccessBurst } from '../../components/illustrations/EmptyState';
+import useAppointmentWizard from './useAppointmentWizard';
+import Step from './Step';
+import SuccessPanel from './SuccessPanel';
 
 export default function BookAppointment() {
-  const navigate = useNavigate();
-  const [specialties, setSpecialties] = useState([]);
-  const [doctors, setDoctors] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [selectedDoctor, setSelectedDoctor] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState('');
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  useEffect(() => {
-    const fetchSpecialties = async () => {
-      try {
-        const response = await api.get('/medicos/especialidades');
-        setSpecialties(response.data || []);
-      } catch (err) {
-        setSpecialties([]);
-      }
-    };
-    fetchSpecialties();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSpecialty) {
-      setDoctors([]);
-      setSelectedDoctor('');
-      return;
-    }
-    const fetchDoctors = async () => {
-      try {
-        const response = await api.get(`/medicos?especialidad_id=${selectedSpecialty}`);
-        setDoctors(response.data || []);
-      } catch (err) {
-        setDoctors([]);
-      }
-    };
-    fetchDoctors();
-  }, [selectedSpecialty]);
-
-  useEffect(() => {
-    if (!selectedDoctor || !selectedDate) {
-      setAvailableSlots([]);
-      return;
-    }
-    const fetchAvailableSlots = async () => {
-      setLoadingSlots(true);
-      setSelectedSlot('');
-      try {
-        const response = await api.get(
-          `/agenda/disponibilidad?medico_id=${selectedDoctor}&fecha=${selectedDate}`
-        );
-        setAvailableSlots(response.data || []);
-      } catch (err) {
-        setAvailableSlots([]);
-      } finally {
-        setLoadingSlots(false);
-      }
-    };
-    fetchAvailableSlots();
-  }, [selectedDoctor, selectedDate]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!selectedDoctor || !selectedDate || !selectedSlot) {
-      setError('Complete todos los campos (especialidad, medico, fecha y horario).');
-      return;
-    }
-    if (dayjs(selectedDate).isBefore(dayjs(), 'day')) {
-      setError('No puede agendar citas en fechas pasadas.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.post('/citas', {
-        medico_id: selectedDoctor,
-        especialidad_id: selectedSpecialty,
-        fecha: selectedDate,
-        // El backend valida hora_inicio como HH:MM exacto, pero la agenda
-        // devuelve HH:MM:SS (formato TIME de Postgres) -> normalizar aqui,
-        // que es el unico punto donde arma el payload de creacion de cita.
-        hora_inicio: selectedSlot.slice(0, 5),
-      });
-      setSuccess('Cita agendada exitosamente con estado CONFIRMADA.');
-      setTimeout(() => navigate('/paciente/mis-citas'), 1800);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al agendar la cita.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const today = dayjs().format('YYYY-MM-DD');
-  const doctorName = doctors.find((d) => d.id === selectedDoctor);
-  const specialtyName = specialties.find((s) => s.id === selectedSpecialty);
+  const {
+    specialties,
+    doctors,
+    availableSlots,
+    selectedSpecialty,
+    setSelectedSpecialty,
+    selectedDoctor,
+    setSelectedDoctor,
+    selectedDate,
+    setSelectedDate,
+    selectedSlot,
+    setSelectedSlot,
+    loadingSlots,
+    loading,
+    error,
+    success,
+    today,
+    doctorName,
+    specialtyName,
+    handleSubmit,
+  } = useAppointmentWizard();
 
   if (success) {
-    return (
-      <div style={styles.successPanel}>
-        <SuccessBurst />
-        <h2 style={styles.successTitle}>¡Cita confirmada!</h2>
-        <p style={styles.successText}>{success}</p>
-        <p style={styles.successHint}>Redirigiendo a Mis Citas...</p>
-      </div>
-    );
+    return <SuccessPanel message={success} />;
   }
 
   return (
@@ -216,18 +128,6 @@ export default function BookAppointment() {
   );
 }
 
-function Step({ n, label, htmlFor, disabled, children }) {
-  return (
-    <div style={{ ...styles.step, ...(disabled ? styles.stepDisabled : {}) }}>
-      <div style={styles.stepLabel}>
-        <span style={styles.stepNum}>{n}</span>
-        <label style={styles.label} htmlFor={htmlFor}>{label}</label>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 const styles = {
   title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
   subtitle: { margin: '0 0 1.5rem', color: 'var(--color-text-muted)' },
@@ -240,23 +140,6 @@ const styles = {
     marginBottom: '1rem',
     fontSize: '0.85rem',
   },
-  successPanel: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    gap: '0.4rem',
-    padding: '3rem 1.5rem',
-    backgroundColor: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: 'var(--shadow)',
-    maxWidth: '460px',
-    margin: '2rem auto',
-  },
-  successTitle: { margin: '0.75rem 0 0', color: 'var(--color-text)', fontSize: '1.4rem' },
-  successText: { margin: 0, color: 'var(--color-text-muted)', fontSize: '0.95rem' },
-  successHint: { margin: '0.5rem 0 0', color: 'var(--color-text-subtle)', fontSize: '0.82rem' },
   form: {
     backgroundColor: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
@@ -265,22 +148,6 @@ const styles = {
     boxShadow: 'var(--shadow-sm)',
     maxWidth: '620px',
   },
-  step: { marginBottom: '1.5rem' },
-  stepDisabled: { opacity: 0.55 },
-  stepLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' },
-  stepNum: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--color-primary-50)',
-    color: 'var(--color-primary-dark)',
-    fontSize: '0.78rem',
-    fontWeight: 800,
-  },
-  label: { color: 'var(--color-text)', fontSize: '0.9rem', fontWeight: 600 },
   select: {
     width: '100%',
     padding: '0.7rem 0.85rem',
