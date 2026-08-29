@@ -14,16 +14,28 @@ Usuarios de prueba y guion de demostracion paso a paso en **[docs/GUION_DEMO.md]
 ## Caracteristicas principales
 
 - Registro y autenticacion de usuarios con verificacion por email
-- Gestion de citas medicas con reglas de negocio (maximo 3 activas, minimo 24h de anticipacion)
+- Gestion de citas medicas con reglas de negocio (maximo 3 activas, minimo 24h
+  de anticipacion salvo que el horario siga libre el mismo dia, cancelacion
+  con 2h de anticipacion minima)
 - Gestion de horarios y agenda de medicos (L-V 8:00-19:00, Sab 8:00-13:00)
-- Ficha clinica con diagnostico, indicaciones y recetas
+- Ficha clinica con diagnostico, indicaciones, recetas y documentos adjuntos
+  (analisis, radiografias) que el paciente puede descargar
+- Historial clinico del paciente visible para el medico al atender (evita
+  atender "a ciegas") y notas privadas por cita (solo medico tratante y
+  administracion, nunca visibles para el paciente)
+- Alerta de cita proxima en el dashboard (paciente: dentro de 24h; medico:
+  dentro de 2h) calculada en el momento, sin cron ni emails automaticos
 - Panel de administracion con control de emergencias y turnos dominicales
-- Notificaciones por email (confirmacion, recordatorios, cancelaciones)
+- Notificaciones por email: confirmacion al agendar y cancelacion cuando
+  cancela un administrador (el recordatorio 24h y la cancelacion por el
+  propio paciente no disparan email, solo quedan en el registro de auditoria)
 - Registro de auditoria de todas las operaciones
 - Control de acceso basado en roles (Paciente, Medico, Administrador, Secretaria)
 - Interfaz responsive (escritorio, tablet y movil) con menu de navegacion adaptable
 - Accesibilidad: labels vinculados a sus campos, foco de teclado visible y enlace
   para saltar la navegacion
+- CI con GitHub Actions: corre los tests del backend y el build+lint del
+  frontend en cada push/PR a `main`
 
 ## Estructura del proyecto
 
@@ -35,20 +47,26 @@ gestionClinica-app/
 │   │   ├── middleware/     # Auth, autorizacion, rate limiting, validacion
 │   │   ├── models/         # Modelos de datos (Paciente, Medico, Cita, etc.)
 │   │   ├── routes/         # Rutas de la API REST
+│   │   │   └── admin/      # Subrouters de /api/admin (citas, medicos,
+│   │   │                   #   especialidades, turnos-domingo, stats)
 │   │   ├── services/       # Logica de negocio
-│   │   ├── utils/          # Utilidades
+│   │   ├── utils/          # Utilidades (sanitizeCita: oculta las notas
+│   │   │                   #   privadas del medico en respuestas a paciente/secretaria)
 │   │   ├── validators/     # Esquemas de validacion
 │   │   └── index.js        # Punto de entrada del servidor
 │   ├── database/
 │   │   └── migrations/     # Scripts SQL de migracion
-│   ├── tests/              # Tests unitarios e integracion
+│   ├── tests/              # Tests unitarios e integracion (Jest + Supertest)
 │   ├── package.json
 │   └── .env.example        # Variables de entorno de ejemplo
+├── .github/workflows/       # CI: tests backend + build/lint frontend en cada push/PR
 ├── frontend/                # SPA con React + Vite
 │   ├── src/
 │   │   ├── components/     # Componentes reutilizables
 │   │   ├── config/         # Configuracion (API client)
-│   │   ├── context/        # Contextos de React (Auth)
+│   │   ├── context/        # Contextos de React (Auth, Theme)
+│   │   ├── utils/          # Utilidades (clases de badge por estado de cita,
+│   │   │                   #   calculo de "cita proxima" para las alertas)
 │   │   └── pages/          # Paginas organizadas por rol
 │   │       ├── patient/    # Vistas del paciente
 │   │       ├── doctor/     # Vistas del medico
@@ -159,9 +177,15 @@ El backend requiere las siguientes variables de entorno (ver `backend/.env.examp
 - `GET /api/medicos` - Listar medicos
 - `POST /api/citas` - Crear cita
 - `GET /api/citas/:id` - Ver detalle de cita
-- `PATCH /api/citas/:id/cancelar` - Cancelar cita
+- `PATCH /api/citas/:id/cancelar` - Cancelar cita (paciente, min. 2h de anticipacion)
+- `PATCH /api/citas/:id/notas` - Nota privada del medico sobre la cita (medico
+  dueno o administrador; nunca visible para paciente/secretaria)
 - `POST /api/agenda` - Cargar horario de medico
 - `POST /api/fichas-clinicas` - Crear ficha clinica
+- `GET /api/fichas-clinicas/:pacienteId` - Historial clinico de un paciente
+  (el propio paciente, o cualquier medico/administrador)
+- `GET /api/fichas-clinicas/:id/documentos` - Documentos adjuntos de una ficha
+  (analisis, radiografias); descarga en `.../documentos/:docId/download`
 
 Para la documentacion completa de endpoints, ver `docs/SDD-v3.md`.
 

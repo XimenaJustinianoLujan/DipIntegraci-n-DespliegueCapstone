@@ -32,6 +32,38 @@ El resto de la organizacion conceptual del v2 (arquitectura de 3 capas, modulos
 de negocio) se mantuvo razonablemente correcta y se conserva aqui, corregida en
 los detalles.
 
+### Actualizacion (28-29 agosto 2026)
+
+Sin cambiar el numero de version (siguen siendo las mismas 8 rutas y la misma
+arquitectura de 3 capas), se agrego lo siguiente y se corrigieron algunos
+puntos donde el codigo no coincidia con lo documentado:
+
+- **Historial clinico visible al medico al atender** (antes solo existia el
+  endpoint, la pantalla de "Atender Paciente" no lo consumia).
+- **Notas privadas del medico por cita** (`PATCH /citas/:id/notas`, §4.4):
+  activa la columna `citas.notas`, que existia en el esquema desde el inicio
+  pero nunca se leia ni escribia. Nunca visible para paciente ni secretaria
+  (ver `backend/src/utils/sanitizeCita.js`).
+- **Documentos adjuntos ahora descargables por el paciente** desde su Ficha
+  Clinica (el endpoint ya lo permitia; faltaba conectarlo en el frontend).
+- **Alerta de cita proxima** en los dashboards de paciente (24h) y medico (2h),
+  calculada en el cliente con los datos ya cargados — no es el modulo de
+  notificaciones por email de §3.5, que sigue sin recordatorio automatico.
+- `admin.routes.js` (426 lineas) se dividio en 5 subrouters por dominio bajo
+  `backend/src/routes/admin/` (§8) — cambio de organizacion interna, los
+  endpoints publicos de §4.7 no cambiaron.
+- Se agrego CI con GitHub Actions (tests backend + build/lint frontend en
+  cada push/PR a `main`).
+- Fix: `Cita.findByPaciente`/`findByMedico`/`findByFecha` no hacian JOIN con
+  medicos/pacientes/especialidades (devolvian "Medico asignado"/"Paciente"
+  genericos en vez del nombre real).
+- Fix: el validador de creacion de citas rechazaba una fecha de **hoy** como
+  "en el pasado" durante casi todo el dia (comparaba fecha-a-medianoche-UTC
+  contra el timestamp completo de "ahora"). Bloqueaba agendar el mismo dia
+  aunque el medico tuviera horarios libres mas tarde.
+- Suite de tests backend: 46 → 138 (cobertura completa de las 8 rutas,
+  antes solo 3 tenian test).
+
 ---
 
 ## 1. Introduccion
@@ -162,6 +194,9 @@ en el reporte de reglas — resumen aqui):
 - `RECONSULTA` **no crea una cita nueva**: solo cambia el estado de la cita
   original de `NO_SHOW` a `RECONSULTA`. Reagendar de verdad requiere una cita
   aparte, sin vinculo formal con la anterior.
+- Cada cita tiene un campo `notas` de uso exclusivo del medico tratante (o
+  administracion): visible solo para quien atiende, nunca para el paciente ni
+  la secretaria, sin importar por que endpoint se consulte la cita.
 
 ### 3.3 Modulo de Horarios/Agenda
 
@@ -185,6 +220,13 @@ guardar la ficha, la cita pasa automaticamente a `COMPLETADA`. El
 `paciente_id` de la ficha se deriva siempre de la cita en el servidor (nunca
 del valor que mande el cliente), para evitar suplantacion.
 
+El historial (`GET /:pacienteId`) se muestra ahora en dos pantallas: al
+paciente en "Mi Ficha Clinica" (con descarga autenticada de documentos, via
+blob + Bearer token, porque un `<a href>` comun no manda el token que exige
+el endpoint de descarga) y al medico en "Atender Paciente" (panel colapsable,
+antes del formulario, para no completar la ficha nueva sin ver el
+antecedente).
+
 ### 3.5 Modulo de Notificaciones
 
 **Responsabilidades reales:**
@@ -195,6 +237,11 @@ del valor que mande el cliente), para evitar suplantacion.
 - Si no hay `SMTP_USER` configurado (o `NODE_ENV=test`), los emails no se
   envian de verdad: se registran por consola y la operacion principal se
   completa igual.
+- **Alerta en la app (no es email):** los dashboards de paciente y medico
+  calculan en el cliente si hay una cita `CONFIRMADA` dentro de las proximas
+  24h (paciente) o 2h (medico) sobre los datos que ya cargaron, y muestran un
+  banner. No usa cron ni dispara ningun envio — es la unica forma de
+  "recordatorio" que existe hoy realmente en produccion.
 
 ### 3.6 Modulo de Auditoria
 
@@ -268,6 +315,7 @@ generico (aplica salvo que se indique otro):
 | `PATCH /:id/completar` | `medico` | dueno, solo desde `CONFIRMADA` |
 | `PATCH /:id/no-show` | `medico` (solo su cita) o `secretaria` (cualquiera) | solo desde `CONFIRMADA` |
 | `PATCH /:id/reconsulta` | `secretaria` (exclusivo) | solo desde `NO_SHOW`; no crea cita nueva |
+| `PATCH /:id/notas` | `medico` (dueno) o `administrador` | nota privada; `403` si el medico no es el tratante; nunca sale en `GET /pacientes/:id/citas` ni `GET /secretaria/citas` |
 
 ### 4.5 Agenda (`/api/agenda`) — requiere `auth`
 
@@ -288,10 +336,15 @@ generico (aplica salvo que se indique otro):
 | `POST /` | `medico` | multipart, campo `documento` opcional; completa la cita |
 | `GET /:pacienteId` | paciente (el suyo), medico/administrador (cualquiera) | incluye datos de medico/especialidad |
 | `GET /:id/documentos` | paciente (dueno), medico/administrador | lista de adjuntos |
-| `GET /:id/documentos/:docId/download` | paciente (dueno) | descarga binaria; valida path traversal |
+| `GET /:id/documentos/:docId/download` | paciente (dueno), medico/administrador (cualquiera) | descarga binaria; valida path traversal; requiere Bearer token (no sirve como `<a href>` directo) |
 | `POST /:id/documentos` | `medico` (dueno de la ficha) | subir un adjunto adicional |
 
 ### 4.7 Administracion (`/api/admin`) — todo bajo `authorize('administrador')`
+
+> Internamente dividido en 5 subrouters por dominio bajo
+> `backend/src/routes/admin/` (citas, turnosDomingo, stats, medicos,
+> especialidades) — cambio de organizacion de archivos, ninguna de las rutas
+> publicas de esta tabla cambio.
 
 | Metodo y ruta | Notas |
 |---|---|
@@ -505,23 +558,30 @@ gestionClinica-app/
 │   │   │            AgendaMedico, Especialidad, FichaClinica, AuditLog)
 │   │   ├── routes/ (auth, pacientes, medicos, citas, agenda, fichaClinica,
 │   │   │            admin, secretaria).routes.js
+│   │   │   └── admin/ (citas, turnosDomingo, stats, medicos,
+│   │   │               especialidades).routes.js — subrouters de /api/admin
 │   │   ├── services/ (appointmentService, scheduleService, authService,
 │   │   │              auditService, notificationService)
+│   │   ├── utils/sanitizeCita.js  # oculta `citas.notas` en respuestas a
+│   │   │                          #   paciente/secretaria
 │   │   └── validators/ (uno por recurso)
 │   ├── database/migrations/ (001 a 008, ver DBD-v3)
 │   ├── scripts/
 │   │   ├── migrate.js            # corre las migraciones, idempotente
 │   │   └── seed.js                # usuarios demo + agenda + cita de hoy
-│   └── tests/ (auth, citas, agenda .test.js — 46 tests, Jest)
+│   └── tests/ (uno por recurso, 8 archivos — 138 tests, Jest)
+├── .github/workflows/ci.yml      # tests backend + build/lint frontend
 └── frontend/
     ├── index.html                 # script inline anti-flash de tema
     └── src/
         ├── App.jsx                # arbol de rutas completo
         ├── main.jsx
         ├── index.css               # sistema de diseno completo (tokens,
-        │                          #   tema oscuro, animaciones)
+        │                          #   tema oscuro, animaciones, clases .badge-*)
         ├── config/api.js          # cliente Axios + interceptor JWT
         ├── context/ (AuthContext, ThemeContext)
+        ├── utils/ (citaStatus.js — clase de badge por estado de cita;
+        │           citaTiming.js — calculo de "cita proxima" para alertas)
         ├── components/
         │   ├── Layout/ (Header, Sidebar, Footer, index/Layout)
         │   ├── ProtectedRoute.jsx
@@ -530,15 +590,20 @@ gestionClinica-app/
         │   └── illustrations/ (EmptyState.jsx)
         └── pages/
             ├── Login.jsx, Register.jsx, Unauthorized.jsx
-            ├── patient/ (Dashboard, BookAppointment, MyAppointments,
-            │             MedicalRecord, Profile)
+            ├── patient/ (Dashboard, MyAppointments, MedicalRecord, Profile,
+            │             BookAppointment/ — hook + subcomponentes)
             ├── doctor/ (Dashboard, Schedule, AttendPatient)
-            ├── admin/ (Dashboard, ManageDoctors, SundayShifts)
+            ├── admin/ (Dashboard, SundayShifts, ManageDoctors/ y
+            │           ManageSpecialties/ — cada una dividida en
+            │           index + form + tabla)
             └── secretary/ (Dashboard)
 ```
 
 No existen carpetas `controllers/` ni `utils/logger.js` como sugeria el v2 —
 la logica de ruta vive directamente en `routes/*.js`, apoyada en `services/`.
+`utils/` si existe (backend y frontend), pero para helpers puntuales
+(sanitizado de notas privadas, clases de badge, calculo de alertas), no como
+capa generica de logging.
 
 ---
 
@@ -625,3 +690,29 @@ de 860px de ancho.
   propias (sin assets externos) para estados vacios (`EmptyCalendar`,
   `EmptyFolder`, `EmptyClipboard`, `EmptyPeople`) y para el momento de exito
   al agendar (`SuccessBurst`, con animacion de check dibujandose).
+
+### 10.5 Paginas divididas en hook/subcomponentes
+
+Las 3 paginas mas grandes (`ManageDoctors`, `ManageSpecialties`,
+`BookAppointment`) pasaron de un archivo monolitico a una carpeta con
+`index.jsx` (orquestacion: estado, efectos, handlers) + un componente por
+formulario/tabla +, en `BookAppointment`, un hook propio
+(`useAppointmentWizard`) para los 3 fetches encadenados del wizard. Sin
+cambio de comportamiento, solo de organizacion — verificado en vivo pagina
+por pagina, no con tests (el frontend sigue sin suite de tests).
+
+### 10.6 Alertas y datos enriquecidos (agosto 2026)
+
+- `utils/citaStatus.js`: antes cada dashboard (paciente, medico, secretaria)
+  tenia su propio objeto `statusColors` **copiado identico**, con estilo
+  inline. Ahora es una sola fuente de verdad (clases `.badge-*` en
+  `index.css`); el helper solo arma el nombre de clase a partir del enum.
+- `utils/citaTiming.js`: calcula si hay una cita `CONFIRMADA` dentro de una
+  ventana de horas (24h paciente, 2h medico) sobre los datos ya cargados —
+  la base de la alerta de §3.5.
+- `AttendPatient.jsx` ahora tambien consume `GET /fichas-clinicas/:pacienteId`
+  (historial) y `PATCH /citas/:id/notas` (nota privada), ademas del flujo de
+  creacion de ficha que ya tenia.
+- `MedicalRecord.jsx` ahora hace un fetch adicional por atencion a
+  `GET /fichas-clinicas/:id/documentos` (el endpoint de historial no trae los
+  documentos embebidos) y descarga via blob autenticado con Axios.

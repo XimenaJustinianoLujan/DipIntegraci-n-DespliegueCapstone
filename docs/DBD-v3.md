@@ -36,6 +36,14 @@ esquema tal como existe hoy en las migraciones reales**, no como se planeo.
 El resto de la estructura conceptual (pacientes/medicos/citas/ficha clinica/agenda,
 el diagrama de estados de `citas`) se mantuvo correcta en el v2 y se conserva aqui.
 
+### Actualizacion (agosto 2026)
+
+Sin cambios de esquema (ninguna migracion nueva, ninguna columna agregada):
+se activo `citas.notas` -que ya existia desde la migracion 005 pero nunca se
+usaba- via un endpoint nuevo (§3.7), y se confirmo que `notificaciones`
+(migracion 008) sigue completamente sin usar (§6). Detalle completo de los
+endpoints y features nuevas en `docs/SDD-v3.md`.
+
 ---
 
 ## 1. Enums
@@ -262,6 +270,14 @@ volver a reservarlo.
 Indices: `idx_citas_paciente`, `idx_citas_medico`, `idx_citas_fecha`,
 `idx_citas_estado`, `idx_citas_especialidad`, `idx_citas_paciente_estado`.
 
+**`notas` activa desde agosto 2026** via `PATCH /api/citas/:id/notas` (solo
+el medico tratante o administracion). Existia en el esquema desde esta misma
+migracion (005) pero ningun endpoint la leia ni escribia hasta ahora. Es
+privada: se excluye explicitamente en `backend/src/utils/sanitizeCita.js` de
+cualquier respuesta que vea el paciente o la secretaria — las demas columnas
+de esta tabla se devuelven completas via `SELECT *`, asi que sin ese filtro
+se hubiera expuesto por accidente apenas alguien la usara.
+
 ### 3.8 `ficha_clinica` / `documentos_adjuntos` (migracion 006)
 
 **`ficha_clinica`**: `id, paciente_id (FK), cita_id (FK), medico_id (FK),
@@ -367,6 +383,12 @@ en `citas` sin vinculo formal a la anterior.
   aplicacion, no la garantiza PostgreSQL.
 - No hay UNIQUE que fuerce 1:1 entre `citas` y `ficha_clinica`, ni entre
   `agenda_medico` y `citas`.
+- **`notificaciones` esta completamente sin usar**: no hay ningun `INSERT`
+  hacia esta tabla en todo `backend/src/`. `NotificationService` manda
+  emails directo con nodemailer, sin pasar por esta tabla ni por la funcion
+  de recordatorio 24h (que tampoco tiene ningun disparador — ver §3.5 del
+  SDD v3). La tabla y el enum `tipo_notificacion` quedaron listos para un
+  futuro sistema de notificaciones in-app, pero hoy es codigo/esquema muerto.
 
 ---
 

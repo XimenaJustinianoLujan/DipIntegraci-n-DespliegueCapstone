@@ -62,9 +62,17 @@ como prueba de que el backend esta operativo en produccion.
    - **Horario disponible**: se cargan los bloques libres; selecciona uno.
    - Clic en **Confirmar Cita** → mensaje "Cita agendada exitosamente con estado CONFIRMADA".
 4. Ve a **Mis Citas**: muestra la cita recien creada con su estado.
+5. Volve al **Dashboard**: si la cita quedo para hoy o manana, senala el banner
+   amarillo de **"Recordatorio: tiene una cita..."** — se calcula al cargar la
+   pagina, sin ningun email de por medio.
+6. (Si ya hay una atencion completada) Ve a **Ficha Clinica** y muestra que
+   los documentos que subio el medico (si los hay) se pueden **descargar**
+   desde ahi.
 
 > **Reglas de negocio que puedes mencionar:** maximo 3 citas activas por paciente,
-> minimo 24 horas de anticipacion, y validacion de horarios segun la agenda del medico.
+> minimo 24 horas de anticipacion (salvo que el medico tenga ese horario libre
+> el mismo dia — **agendar para HOY funciona**), y validacion de horarios segun
+> la agenda del medico.
 
 ---
 
@@ -75,13 +83,21 @@ como prueba de que el backend esta operativo en produccion.
    (Ximena) que crea el seed.
 3. Ve a **Atender Paciente**:
    - En la lista "Citas Confirmadas de Hoy", haz clic en la cita de la paciente.
+   - Despliega el panel **"Historial clinico del paciente"** — muestra
+     atenciones anteriores (de cualquier medico) antes de completar una nueva.
+   - Escribe una **nota privada** (ej. "alergico a la penicilina") y guardala —
+     aclara que esto **nunca lo ve el paciente ni la secretaria**, solo
+     medicos y administracion.
    - Completa la **Ficha Clinica**: Diagnostico (obligatorio), Indicaciones, Receta.
    - (Opcional) Adjunta un documento (PDF/imagen).
    - Clic en **Guardar Ficha y Completar Cita** → la cita pasa a estado **COMPLETADA**.
 4. Menciona el boton **NO_SHOW** (cuando el paciente no se presenta).
 
 > **Punto fuerte:** aqui se ve el control de acceso por rol — el medico solo ve y
-> gestiona SUS citas, y solo el medico puede crear fichas clinicas.
+> gestiona SUS citas, y solo el medico puede crear fichas clinicas. La nota
+> privada es un buen ejemplo de dato sensible que se filtra por diseno: se
+> excluye explicitamente en el backend de cualquier respuesta que vea otro rol,
+> no solo se oculta en la pantalla.
 
 ---
 
@@ -122,9 +138,12 @@ Este es el corazon del capstone. Resalta:
   **roles (RBAC)**, y configuracion de **CORS** para permitir el dominio del frontend.
 - **Base de datos versionada**: 8 **migraciones** SQL ejecutables con `npm run migrate`
   y datos de demo con `npm run seed` (idempotente).
-- **Calidad**: 46 pruebas automatizadas (Jest) que pasan.
-- **CI implicito**: cada `git push` a `main` redespliega backend (Railway) y frontend
-  (Vercel) automaticamente.
+- **Calidad**: 138 pruebas automatizadas (Jest + Supertest) que pasan, cubriendo
+  las 8 rutas del backend.
+- **CI real**: GitHub Actions corre los tests del backend y el build+lint del
+  frontend en cada push/PR a `main` (`.github/workflows/ci.yml`) — separado del
+  **despliegue**, que Railway y Vercel disparan automaticamente en cada push
+  a `main` por su cuenta.
 - **Diseno responsive y accesible**: un sistema de diseno unico (colores, tipografia,
   componentes) en las 4 vistas por rol; navegacion con menu hamburguesa en movil/tablet;
   labels vinculados a sus campos y enlace para saltar la navegacion (accesibilidad).
@@ -141,10 +160,16 @@ Cierra mostrando el repositorio en GitHub y la guia `docs/DESPLIEGUE.md`.
 - **¿Que pasa si dos pacientes piden el mismo horario?** Un indice unico parcial en la
   base impide dos citas activas en el mismo bloque del mismo medico.
 - **¿Los datos persisten?** Si, en PostgreSQL gestionado (Railway) con volumen propio.
-- **¿Y los emails?** El sistema los soporta (confirmacion, recordatorio, cancelacion);
-  en la demo estan en modo consola porque no configuramos un SMTP real.
+- **¿Y los emails?** El sistema envia confirmacion al agendar y cancelacion cuando
+  cancela un administrador; en la demo estan en modo consola porque no
+  configuramos un SMTP real. El recordatorio de 24h **no es por email** — hoy
+  es un aviso calculado en el dashboard al entrar (sin cron ni infraestructura
+  extra); la funcion de email para eso existe en el codigo pero nunca se conecto
+  a un disparador automatico, a proposito no la prendimos sin verificarla con calma.
 - **¿Como escalarias?** Separar almacenamiento de archivos a un servicio de objetos
-  (S3/Blob), agregar un cron para recordatorios y CI/CD con pruebas antes del deploy.
+  (S3/Blob), agregar un cron real si se quiere ademas un recordatorio por email
+  (la funcion ya existe, falta el disparador), y sumar tests de frontend
+  (hoy solo el backend tiene suite automatizada).
 
 ---
 
