@@ -175,6 +175,19 @@ describe('Pacientes Routes', () => {
       expect(res.body).toHaveLength(1);
     });
 
+    it('should never include the doctor private notes, even for a doctor consulting the list', async () => {
+      db.query.mockResolvedValueOnce({
+        rows: [{ id: 'c1', estado: 'CONFIRMADA', notas: 'Nota privada de otro medico' }],
+      });
+
+      const res = await request(app)
+        .get(`/api/pacientes/${PATIENT_ID}/citas`)
+        .set('Authorization', `Bearer ${doctorToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body[0].notas).toBeUndefined();
+    });
+
     it('should reject a patient listing someone else\'s appointments', async () => {
       const res = await request(app)
         .get(`/api/pacientes/${OTHER_PATIENT_ID}/citas`)

@@ -4,6 +4,8 @@ import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import { EmptyCalendar } from '../../components/illustrations/EmptyState';
 import { citaStatusClass } from '../../utils/citaStatus';
+import { hoursUntilCita, findUpcomingWithin } from '../../utils/citaTiming';
+import dayjs from 'dayjs';
 
 const actions = [
   { to: '/paciente/agendar', icon: '📅', label: 'Agendar Cita', desc: 'Reserve un nuevo turno' },
@@ -38,6 +40,11 @@ export default function PatientDashboard() {
     fetchAppointments();
   }, [user.id]);
 
+  // Aviso en la propia app si hay una cita confirmada dentro de las
+  // proximas 24hs -sin mandar ningun email automatico, solo se calcula
+  // con lo que ya se trajo de la API al entrar al dashboard.
+  const upcoming = findUpcomingWithin(appointments, 24);
+
   return (
     <div>
       <header style={styles.head}>
@@ -46,6 +53,22 @@ export default function PatientDashboard() {
           Panel del paciente · {today}
         </p>
       </header>
+
+      {upcoming && (
+        <div style={styles.reminderBanner} role="status">
+          <span style={styles.reminderIcon}>🔔</span>
+          <span>
+            <strong>Recordatorio:</strong> tiene una cita{' '}
+            {hoursUntilCita(upcoming.cita) < 2
+              ? `en ${Math.max(0, Math.round(hoursUntilCita(upcoming.cita) * 60))} minutos`
+              : dayjs(upcoming.cita.fecha).isSame(dayjs(), 'day')
+                ? 'hoy'
+                : 'manana'}
+            {' a las '}{upcoming.cita.hora_inicio?.slice(0, 5)}
+            {upcoming.cita.medico_nombre ? ` con Dr. ${upcoming.cita.medico_nombre}` : ''}.
+          </span>
+        </div>
+      )}
 
       <section style={styles.actions}>
         {actions.map((a) => (
@@ -89,7 +112,7 @@ export default function PatientDashboard() {
                     </span>
                   </span>
                   <div>
-                    <strong style={styles.doctor}>{cita.medico_nombre || 'Medico asignado'}</strong>
+                    <strong style={styles.doctor}>{cita.medico_nombre ? `Dr. ${cita.medico_nombre}` : 'Medico asignado'}</strong>
                     <p style={styles.meta}>
                       🕐 {cita.hora_inicio}
                       {cita.especialidad ? ` · ${cita.especialidad}` : ''}
@@ -113,6 +136,19 @@ const styles = {
   title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
   subtitle: { margin: 0, color: 'var(--color-text-muted)' },
   date: { textTransform: 'capitalize' },
+  reminderBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    padding: '0.85rem 1.1rem',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--color-warning-bg)',
+    border: '1px solid #fde68a',
+    borderRadius: 'var(--radius)',
+    color: 'var(--color-text)',
+    fontSize: '0.9rem',
+  },
+  reminderIcon: { fontSize: '1.2rem', flexShrink: 0 },
   actions: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

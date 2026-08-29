@@ -7,6 +7,7 @@ const Cita = require('../models/Cita');
 const FichaClinica = require('../models/FichaClinica');
 const { updatePacienteValidator, pacienteIdValidator } = require('../validators/paciente.validator');
 const validate = require('../middleware/validate');
+const { omitNotasFromList } = require('../utils/sanitizeCita');
 
 // GET /api/pacientes/:id
 router.get('/:id', auth, pacienteIdValidator, validate, async (req, res, next) => {
@@ -83,7 +84,10 @@ router.get('/:id/citas', auth, pacienteIdValidator, validate, async (req, res, n
       offset: parseInt(offset, 10) || 0,
     });
 
-    res.json(citas);
+    // Vista "citas de un paciente" (no "mis citas como medico"): las
+    // notas privadas de cada medico tratante no corresponden aca, ni
+    // siquiera si quien consulta es otro medico.
+    res.json(omitNotasFromList(citas));
   } catch (error) {
     next(error);
   }

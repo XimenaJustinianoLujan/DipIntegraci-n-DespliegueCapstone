@@ -6,6 +6,7 @@ const AppointmentService = require('../services/appointmentService');
 const Cita = require('../models/Cita');
 const { citaIdValidator } = require('../validators/cita.validator');
 const validate = require('../middleware/validate');
+const { omitNotasFromList } = require('../utils/sanitizeCita');
 
 // Apply auth and secretary-only to all routes
 router.use(auth, authorize('secretaria'));
@@ -22,7 +23,8 @@ router.get('/citas', async (req, res, next) => {
     }
 
     const citas = await Cita.findByFecha(fecha);
-    res.json(citas);
+    // Las notas privadas del medico tratante no son para secretaria.
+    res.json(omitNotasFromList(citas));
   } catch (error) {
     next(error);
   }

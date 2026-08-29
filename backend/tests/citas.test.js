@@ -30,11 +30,14 @@ const SPECIALTY_ID = '99cae7d7-4a18-4488-b687-5f20d32ff59e';
 const CITA_ID = '824ffffb-5c63-476f-8593-444bd7a46311';
 const AGENDA_ID = '543ffb6d-71db-4b66-bd38-345c01787987';
 const OTHER_PATIENT_ID = '01acb09e-1dc6-432e-a866-6ccf1313f9db';
+const OTHER_DOCTOR_ID = '8b6d3f4b-7f1b-4a3a-9b0a-2f6e9b6d3f4b';
+const ADMIN_ID = 'f3f8e6a2-3f4a-4a3b-9a1a-1a2b3c4d5e6f';
 
 describe('Citas (Appointments) Routes', () => {
   let patientToken;
   let doctorToken;
   let secretaryToken;
+  let adminToken;
 
   beforeAll(() => {
     patientToken = jwt.sign(
@@ -49,6 +52,11 @@ describe('Citas (Appointments) Routes', () => {
     );
     secretaryToken = jwt.sign(
       { id: SECRETARY_ID, role: 'secretaria', email: 'secretary@test.com' },
+      env.jwtSecret,
+      { expiresIn: '1h' }
+    );
+    adminToken = jwt.sign(
+      { id: ADMIN_ID, role: 'administrador', email: 'admin@test.com' },
       env.jwtSecret,
       { expiresIn: '1h' }
     );
@@ -408,6 +416,125 @@ describe('Citas (Appointments) Routes', () => {
         .set('Authorization', `Bearer ${patientToken}`);
 
       expect(res.status).toBe(404);
+    });
+
+    it('should not include the doctor private notes when the requester is the patient', async () => {
+      db.query.mockResolvedValueOnce({
+        rows: [{
+          id: CITA_ID,
+          paciente_id: PATIENT_ID,
+          medico_id: DOCTOR_ID,
+          estado: 'CONFIRMADA',
+          notas: 'Paciente hipertenso, revisar presion en cada visita',
+        }],
+      });
+
+      const res = await request(app)
+        .get(`/api/citas/${CITA_ID}`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.notas).toBeUndefined();
+    });
+
+    it('should include the doctor private notes when the requester is the treating doctor', async () => {
+      db.query.mockResolvedValueOnce({
+        rows: [{
+          id: CITA_ID,
+          paciente_id: PATIENT_ID,
+          medico_id: DOCTOR_ID,
+          estado: 'CONFIRMADA',
+          notas: 'Paciente hipertenso, revisar presion en cada visita',
+        }],
+      });
+
+      const res = await request(app)
+        .get(`/api/citas/${CITA_ID}`)
+        .set('Authorization', `Bearer ${doctorToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.notas).toBe('Paciente hipertenso, revisar presion en cada visita');
+    });
+  });
+
+  describe('PATCH /api/citas/:id/notas - Doctor private notes', () => {
+    it('should let the treating doctor save a private note', async () => {
+      db.query
+        // Cita.findById
+        .mockResolvedValueOnce({ rows: [{ id: CITA_ID, medico_id: DOCTOR_ID }] })
+        // Cita.updateNotas
+        .mockResolvedValueOnce({
+          rows: [{ id: CITA_ID, medico_id: DOCTOR_ID, notas: 'Alergico a la penicilina' }],
+        });
+
+      const res = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ notas: 'Alergico a la penicilina' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.cita.notas).toBe('Alergico a la penicilina');
+    });
+
+    it('should let an admin save a private note on any appointment', async () => {
+      db.query
+        .mockResolvedValueOnce({ rows: [{ id: CITA_ID, medico_id: DOCTOR_ID }] })
+        .mockResolvedValueOnce({ rows: [{ id: CITA_ID, notas: 'Revisado por administracion' }] });
+
+      const res = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ notas: 'Revisado por administracion' });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should reject a doctor trying to add notes to another doctor\'s appointment', async () => {
+      db.query.mockResolvedValueOnce({ rows: [{ id: CITA_ID, medico_id: OTHER_DOCTOR_ID }] });
+
+      const res = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ notas: 'Intento no autorizado' });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should reject a patient or secretary trying to write notes', async () => {
+      const resPatient = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ notas: 'No deberia poder' });
+      expect(resPatient.status).toBe(403);
+
+      const resSecretary = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${secretaryToken}`)
+        .send({ notas: 'No deberia poder' });
+      expect(resSecretary.status).toBe(403);
+
+      expect(db.query).not.toHaveBeenCalled();
+    });
+
+    it('should return 404 when the appointment does not exist', async () => {
+      db.query.mockResolvedValueOnce({ rows: [] });
+
+      const res = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ notas: 'Cualquier cosa' });
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should reject notes longer than 1000 characters', async () => {
+      const res = await request(app)
+        .patch(`/api/citas/${CITA_ID}/notas`)
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ notas: 'a'.repeat(1001) });
+
+      expect(res.status).toBe(400);
+      expect(db.query).not.toHaveBeenCalled();
     });
   });
 });

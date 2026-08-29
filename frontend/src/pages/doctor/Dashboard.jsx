@@ -4,6 +4,7 @@ import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import StatusBreakdownBar from '../../components/charts/StatusBreakdownBar';
 import { citaStatusClass } from '../../utils/citaStatus';
+import { hoursUntilCita, findUpcomingWithin } from '../../utils/citaTiming';
 
 const rawToday = new Date().toLocaleDateString('es-ES', {
   weekday: 'long',
@@ -34,6 +35,13 @@ export default function DoctorDashboard() {
 
   const confirmadas = todayAppointments.filter((c) => c.estado === 'CONFIRMADA').length;
 
+  // Aviso en la app si la proxima cita CONFIRMADA arranca en menos de 2
+  // horas -util para que el medico se organice sin depender de emails.
+  const upcoming = findUpcomingWithin(
+    todayAppointments.filter((c) => c.estado === 'CONFIRMADA'),
+    2
+  );
+
   const countsByEstado = useMemo(() => {
     const counts = {};
     for (const c of todayAppointments) counts[c.estado] = (counts[c.estado] || 0) + 1;
@@ -46,6 +54,17 @@ export default function DoctorDashboard() {
         <h1 style={styles.title}>Bienvenido, Dr. {user?.nombre}</h1>
         <p style={styles.subtitle}>Panel del medico · {today}</p>
       </header>
+
+      {upcoming && (
+        <div style={styles.reminderBanner} role="status">
+          <span style={styles.reminderIcon}>🔔</span>
+          <span>
+            <strong>Proxima cita:</strong> {upcoming.cita.paciente_nombre || 'Paciente'}{' '}
+            en {Math.max(0, Math.round(hoursUntilCita(upcoming.cita) * 60))} minutos
+            {' '}({upcoming.cita.hora_inicio?.slice(0, 5)}).
+          </span>
+        </div>
+      )}
 
       <section style={styles.stats}>
         <div style={styles.statCard}>
@@ -107,6 +126,19 @@ export default function DoctorDashboard() {
 
 const styles = {
   head: { marginBottom: '1.75rem' },
+  reminderBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    padding: '0.85rem 1.1rem',
+    marginBottom: '1.5rem',
+    backgroundColor: 'var(--color-warning-bg)',
+    border: '1px solid #fde68a',
+    borderRadius: 'var(--radius)',
+    color: 'var(--color-text)',
+    fontSize: '0.9rem',
+  },
+  reminderIcon: { fontSize: '1.2rem', flexShrink: 0 },
   title: { margin: '0 0 0.25rem', color: 'var(--color-text)', fontSize: '1.7rem' },
   subtitle: { margin: 0, color: 'var(--color-text-muted)' },
   stats: {

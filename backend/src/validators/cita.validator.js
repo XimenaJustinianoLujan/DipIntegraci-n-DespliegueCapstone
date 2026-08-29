@@ -41,8 +41,17 @@ const citaIdValidator = [
     .isUUID().withMessage('ID de cita invalido'),
 ];
 
+const notasCitaValidator = [
+  param('id')
+    .isUUID().withMessage('ID de cita invalido'),
+  body('notas')
+    .trim()
+    .isLength({ max: 1000 }).withMessage('Las notas no pueden exceder 1000 caracteres'),
+];
+
 module.exports = {
   createCitaValidator,
   cancelCitaValidator,
   citaIdValidator,
+  notasCitaValidator,
 };

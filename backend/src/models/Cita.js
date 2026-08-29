@@ -19,17 +19,28 @@ class Cita {
     return result.rows[0] || null;
   }
 
+  // Trae el nombre del medico y la especialidad con LEFT JOIN (no INNER):
+  // si el medico se dio de baja o la especialidad se desactivo, la cita
+  // vieja se sigue viendo -solo con esos campos en null- en vez de
+  // desaparecer de la lista o tirar un error.
   static async findByPaciente(paciente_id, { estado, limit = 20, offset = 0 } = {}) {
-    let query = 'SELECT * FROM citas WHERE paciente_id = $1 AND deleted_at IS NULL';
+    let query = `
+      SELECT c.*,
+             (m.nombre || ' ' || m.apellido) AS medico_nombre,
+             e.nombre AS especialidad
+      FROM citas c
+      LEFT JOIN medicos m ON m.id = c.medico_id
+      LEFT JOIN especialidades e ON e.id = c.especialidad_id
+      WHERE c.paciente_id = $1 AND c.deleted_at IS NULL`;
     const params = [paciente_id];
 
     if (estado) {
       params.push(estado);
-      query += ` AND estado = $${params.length}`;
+      query += ` AND c.estado = $${params.length}`;
     }
 
     params.push(limit);
-    query += ` ORDER BY fecha DESC, hora_inicio ASC LIMIT $${params.length}`;
+    query += ` ORDER BY c.fecha DESC, c.hora_inicio ASC LIMIT $${params.length}`;
     params.push(offset);
     query += ` OFFSET $${params.length}`;
 
@@ -38,21 +49,28 @@ class Cita {
   }
 
   static async findByMedico(medico_id, { fecha, estado, limit = 20, offset = 0 } = {}) {
-    let query = 'SELECT * FROM citas WHERE medico_id = $1 AND deleted_at IS NULL';
+    let query = `
+      SELECT c.*,
+             (p.nombre || ' ' || p.apellido) AS paciente_nombre,
+             e.nombre AS especialidad
+      FROM citas c
+      LEFT JOIN pacientes p ON p.id = c.paciente_id
+      LEFT JOIN especialidades e ON e.id = c.especialidad_id
+      WHERE c.medico_id = $1 AND c.deleted_at IS NULL`;
     const params = [medico_id];
 
     if (fecha) {
       params.push(fecha);
-      query += ` AND fecha = $${params.length}`;
+      query += ` AND c.fecha = $${params.length}`;
     }
 
     if (estado) {
       params.push(estado);
-      query += ` AND estado = $${params.length}`;
+      query += ` AND c.estado = $${params.length}`;
     }
 
     params.push(limit);
-    query += ` ORDER BY fecha ASC, hora_inicio ASC LIMIT $${params.length}`;
+    query += ` ORDER BY c.fecha ASC, c.hora_inicio ASC LIMIT $${params.length}`;
     params.push(offset);
     query += ` OFFSET $${params.length}`;
 
@@ -142,21 +160,40 @@ class Cita {
   }
 
   static async findByFecha(fecha, { estado, limit = 50, offset = 0 } = {}) {
-    let query = 'SELECT * FROM citas WHERE fecha = $1 AND deleted_at IS NULL';
+    let query = `
+      SELECT c.*,
+             (p.nombre || ' ' || p.apellido) AS paciente_nombre,
+             (m.nombre || ' ' || m.apellido) AS medico_nombre,
+             e.nombre AS especialidad
+      FROM citas c
+      LEFT JOIN pacientes p ON p.id = c.paciente_id
+      LEFT JOIN medicos m ON m.id = c.medico_id
+      LEFT JOIN especialidades e ON e.id = c.especialidad_id
+      WHERE c.fecha = $1 AND c.deleted_at IS NULL`;
     const params = [fecha];
 
     if (estado) {
       params.push(estado);
-      query += ` AND estado = $${params.length}`;
+      query += ` AND c.estado = $${params.length}`;
     }
 
     params.push(limit);
-    query += ` ORDER BY hora_inicio ASC LIMIT $${params.length}`;
+    query += ` ORDER BY c.hora_inicio ASC LIMIT $${params.length}`;
     params.push(offset);
     query += ` OFFSET $${params.length}`;
 
     const result = await db.query(query, params);
     return result.rows;
+  }
+
+  // Nota privada del medico tratante sobre la cita (nunca visible para
+  // el paciente ni la secretaria - ver backend/src/utils/sanitizeCita.js).
+  static async updateNotas(id, notas) {
+    const result = await db.query(
+      'UPDATE citas SET notas = $2, updated_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING *',
+      [id, notas]
+    );
+    return result.rows[0] || null;
   }
 
   static async isSlotAvailable(medico_id, fecha, hora_inicio) {

@@ -71,6 +71,19 @@ describe('Secretaria Routes', () => {
       expect(res.body).toHaveLength(1);
     });
 
+    it('should never include the doctor private notes', async () => {
+      db.query.mockResolvedValueOnce({
+        rows: [{ id: CITA_ID, fecha: '2026-08-31', estado: 'CONFIRMADA', notas: 'Nota privada del medico' }],
+      });
+
+      const res = await request(app)
+        .get('/api/secretaria/citas?fecha=2026-08-31')
+        .set('Authorization', `Bearer ${secretaryToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body[0].notas).toBeUndefined();
+    });
+
     it('should reject when fecha query param is missing', async () => {
       const res = await request(app)
         .get('/api/secretaria/citas')
