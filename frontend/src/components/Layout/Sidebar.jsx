@@ -17,6 +17,7 @@ const sidebarLinks = {
   administrador: [
     { to: '/admin', label: 'Inicio', icon: '🏠' },
     { to: '/admin/medicos', label: 'Gestionar Medicos', icon: '👨‍⚕️' },
+    { to: '/admin/especialidades', label: 'Especialidades', icon: '🏷️' },
     { to: '/admin/turnos-domingo', label: 'Turnos Domingo', icon: '🚑' },
   ],
   secretaria: [

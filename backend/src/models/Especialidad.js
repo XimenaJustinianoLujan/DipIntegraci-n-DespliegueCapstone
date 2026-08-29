@@ -27,10 +27,11 @@ class Especialidad {
     return result.rows[0] || null;
   }
 
-  static async findAll() {
-    const result = await db.query(
-      'SELECT * FROM especialidades WHERE activo = TRUE ORDER BY nombre ASC'
-    );
+  static async findAll({ includeInactive = false } = {}) {
+    const query = includeInactive
+      ? 'SELECT * FROM especialidades ORDER BY nombre ASC'
+      : 'SELECT * FROM especialidades WHERE activo = TRUE ORDER BY nombre ASC';
+    const result = await db.query(query);
     return result.rows;
   }
 

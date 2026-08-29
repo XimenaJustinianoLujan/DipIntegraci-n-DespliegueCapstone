@@ -19,6 +19,7 @@ const navByRole = {
   administrador: [
     { to: '/admin', label: 'Dashboard', icon: '🏠' },
     { to: '/admin/medicos', label: 'Gestionar Medicos', icon: '👨‍⚕️' },
+    { to: '/admin/especialidades', label: 'Especialidades', icon: '🏷️' },
     { to: '/admin/turnos-domingo', label: 'Turnos Domingo', icon: '🚑' },
   ],
   secretaria: [

@@ -24,6 +24,7 @@ import AttendPatient from './pages/doctor/AttendPatient';
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard';
 import ManageDoctors from './pages/admin/ManageDoctors';
+import ManageSpecialties from './pages/admin/ManageSpecialties';
 import SundayShifts from './pages/admin/SundayShifts';
 
 // Secretary pages
@@ -149,6 +150,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['administrador']}>
                   <ManageDoctors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/especialidades"
+              element={
+                <ProtectedRoute allowedRoles={['administrador']}>
+                  <ManageSpecialties />
                 </ProtectedRoute>
               }
             />
