@@ -49,8 +49,11 @@ router.post('/turnos-domingo', async (req, res, next) => {
       });
     }
 
-    // Verify the date is a Sunday
-    const day = new Date(fecha).getDay();
+    // Verify the date is a Sunday. `fecha` llega como 'YYYY-MM-DD' y se
+    // parsea como medianoche UTC; usar getDay() (hora local del servidor)
+    // clasifica mal el dia en cualquier timezone distinto de UTC. getUTCDay()
+    // es consistente sin importar donde corra el proceso.
+    const day = new Date(fecha).getUTCDay();
     if (day !== 0) {
       return res.status(400).json({
         error: 'Datos invalidos',
