@@ -8,6 +8,18 @@ function initials(name = '') {
   return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || 'U';
 }
 
+// Formatea 'YYYY-MM-DD' (o un timestamp ISO como '2026-08-29T00:00:00.000Z',
+// que es como llega si Postgres devuelve la columna como Date) a DD/MM/YYYY
+// con manipulacion de string pura -sin pasar por Date/dayjs-, que
+// interpretan un valor sin hora segun la zona horaria del navegador y
+// pueden correr el dia (mismo tipo de bug ya visto en otros lados de la
+// app con getDay() y comparaciones de fecha).
+function formatFecha(value) {
+  if (!value) return '—';
+  const [y, m, d] = String(value).slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
+}
+
 // El endpoint de descarga exige el token Bearer (como cualquier otro
 // endpoint de la API), asi que un <a href> comun no sirve -el navegador
 // no manda el header al navegar directo-. Se pide como blob autenticado
@@ -108,7 +120,7 @@ export default function MedicalRecord() {
               <span style={styles.dot} aria-hidden="true" />
               <div style={styles.card}>
                 <div style={styles.cardHeader}>
-                  <strong style={styles.cardDate}>📅 Atencion del {record.fecha}</strong>
+                  <strong style={styles.cardDate}>📅 Atencion del {formatFecha(record.fecha)}</strong>
                   <span style={styles.doctor}>Dr. {record.medico_nombre}</span>
                 </div>
                 <div style={styles.cardBody}>
