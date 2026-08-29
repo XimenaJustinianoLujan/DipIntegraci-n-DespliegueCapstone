@@ -11,9 +11,14 @@ const createCitaValidator = [
     .notEmpty().withMessage('La fecha es requerida')
     .isISO8601().withMessage('Formato de fecha invalido')
     .custom((value) => {
-      const appointmentDate = new Date(value);
-      const now = new Date();
-      if (appointmentDate < now) {
+      // Comparar timestamps completos (fecha a medianoche UTC vs "ahora")
+      // rechazaba el dia de HOY casi todo el dia: apenas pasa la
+      // medianoche UTC, "ahora" ya es mayor que la medianoche de la
+      // fecha elegida y la cita se marca como "en el pasado" aunque
+      // falten horas de disponibilidad reales. Comparar solo la parte
+      // de fecha (YYYY-MM-DD) permite agendar para hoy a cualquier hora.
+      const today = new Date().toISOString().slice(0, 10);
+      if (value.slice(0, 10) < today) {
         throw new Error('La fecha no puede ser en el pasado');
       }
       return true;

@@ -130,6 +130,35 @@ describe('Citas (Appointments) Routes', () => {
       expect(res.body.cita.estado).toBe('CONFIRMADA');
     });
 
+    it('should allow booking an appointment for today when the doctor still has that slot open', async () => {
+      const todayDate = new Date().toISOString().split('T')[0];
+      const slotRow = { id: AGENDA_ID, hora_inicio: '09:00:00', hora_fin: '10:00:00' };
+
+      db.query
+        .mockResolvedValueOnce({ rows: [{ id: PATIENT_ID, nombre: 'Juan', email: 'patient@test.com' }] })
+        .mockResolvedValueOnce({ rows: [{ id: DOCTOR_ID, estado: 'ACTIVO' }] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] })
+        .mockResolvedValueOnce({ rows: [] }) // hasActiveInEspecialidad
+        .mockResolvedValueOnce({ rows: [] }) // hasActiveWithMedico
+        // Como faltan menos de 24hs, el servicio primero chequea si el
+        // horario sigue libre en la agenda (excepcion de "misma hora
+        // disponible") antes de rechazar por anticipacion minima.
+        .mockResolvedValueOnce({ rows: [slotRow] })
+        .mockResolvedValueOnce({ rows: [] }) // isSlotAvailable
+        .mockResolvedValueOnce({ rows: [slotRow] }) // findAvailableSlots (agenda entry)
+        .mockResolvedValueOnce({
+          rows: [{ id: CITA_ID, fecha: todayDate, hora_inicio: '09:00', estado: 'CONFIRMADA' }],
+        })
+        .mockResolvedValueOnce({ rows: [{}] }); // audit log
+
+      const res = await request(app)
+        .post('/api/citas')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ ...validCita, fecha: todayDate });
+
+      expect(res.status).toBe(201);
+    });
+
     it('should reject when patient has 3 active appointments (max limit)', async () => {
       db.query
         // findById paciente
