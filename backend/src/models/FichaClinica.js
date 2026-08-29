@@ -20,8 +20,18 @@ class FichaClinica {
   }
 
   static async findByPaciente(paciente_id) {
+    // medico_nombre va combinado (nombre + apellido) porque la UI del
+    // paciente (MedicalRecord.jsx) lo muestra como un solo campo "Dr.
+    // {medico_nombre}" -antes venian separados en medico_nombre/
+    // medico_apellido y el apellido se perdia en silencio. c.fecha
+    // tambien faltaba: la ficha en si no tiene columna de fecha propia
+    // (usa el created_at del registro), la fecha real de la atencion es
+    // la de la cita asociada.
     const result = await db.query(
-      `SELECT fc.*, m.nombre as medico_nombre, m.apellido as medico_apellido, e.nombre as especialidad
+      `SELECT fc.*,
+              (m.nombre || ' ' || m.apellido) AS medico_nombre,
+              e.nombre AS especialidad,
+              c.fecha AS fecha
        FROM ficha_clinica fc
        JOIN medicos m ON fc.medico_id = m.id
        JOIN citas c ON fc.cita_id = c.id
