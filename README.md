@@ -80,6 +80,7 @@ gestionClinica-app/
 │   ├── SDD-v3.md           # Diseno del sistema (fiel al codigo actual)
 │   ├── DBD-v3.md           # Diseno de base de datos (fiel al codigo actual)
 │   ├── BDD-v2.md           # Escenarios BDD en Gherkin, fieles al codigo
+│   ├── MANUAL_TECNICO.md   # Manual tecnico con capturas reales del sistema
 │   ├── Diagramas-v2.md     # Diagramas de secuencia, fieles al codigo
 │   ├── SDD-v2.md, DBD-v2.md, BDD.md, Diagramas.md  # versiones anteriores (historial)
 │   ├── DESPLIEGUE.md       # guia de despliegue paso a paso
